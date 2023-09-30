@@ -14,13 +14,37 @@ import java.util.concurrent.LinkedBlockingQueue;
  */
 class Philosopher {
     /**
+     * The logger for the Philosopher class
+     */
+    private static final Logger logger = LogManager.getLogger(Philosopher.class);
+    /**
+     * The interval for eating
+     * The first element is the maximum time in milliseconds
+     * The second element is the minimum time in milliseconds
+     */
+    private final int[] eatInterval = new int[]{10000, 5000};
+    /**
+     * The interval for thinking
+     * The first element is the maximum time in milliseconds
+     * The second element is the minimum time in milliseconds
+     */
+    private final int[] thinkInterval = new int[]{30000, 5000};
+    /**
+     * The maximum number of retries
+     */
+    int maxRetries = 20;
+    /**
+     * The interval between retries in milliseconds
+     */
+    int retryIntervalMillis = 1000;
+    /**
      * The ID of the philosopher
      */
     private int philosopherId;
     /**
      * The Lamport clock of the philosopher
      */
-    private LamportClock lamportClock = new LamportClock();
+    private final LamportClock lamportClock = new LamportClock();
     /**
      * The left fork of the philosopher
      */
@@ -37,37 +61,13 @@ class Philosopher {
     private boolean inCriticalSection;
     private boolean isRequesting;
     /**
-     * The logger for the Philosopher class
-     */
-    private static final Logger logger = LogManager.getLogger(Philosopher.class);
-    /**
      * The queue of deferred requests
      */
-    private BlockingQueue<DeferredRequest> deferredRequests = new LinkedBlockingQueue<>(2);
-
+    private final BlockingQueue<DeferredRequest> deferredRequests = new LinkedBlockingQueue<>(2);
     /**
-     * The interval for eating
-     * The first element is the maximum time in milliseconds
-     * The second element is the minimum time in milliseconds
+     * The local counter of the philosopher
      */
-    private final int[] eatInterval = new int[]{10000, 5000};
-
-    /**
-     * The interval for thinking
-     * The first element is the maximum time in milliseconds
-     * The second element is the minimum time in milliseconds
-     */
-    private final int[] thinkInterval = new int[]{30000, 5000};
-
-    /**
-     * The maximum number of retries
-     */
-    int maxRetries = 20;
-    /**
-     * The interval between retries in milliseconds
-     */
-    int retryIntervalMillis = 1000;
-
+    private final GCounter localCounter = new GCounter(philosopherId);
 
     /**
      * Constructor for the Philosopher class
@@ -98,6 +98,11 @@ class Philosopher {
      * Simulate eating
      */
     public void eat() {
+        // Increment the local counter
+        localCounter.increment();
+        // Send the counter to the neighbors
+        sendCounter(rightNeighborSocket, Direction.LEFT, localCounter);
+        sendCounter(leftNeighborSocket, Direction.RIGHT, localCounter);
         logger.info("Philosopher " + philosopherId + " is eating.");
         try {
             Thread.sleep(new Random().nextInt(eatInterval[0] - eatInterval[1] + 1) + eatInterval[1]);
@@ -173,6 +178,7 @@ class Philosopher {
         // Reset fork states
         hasLeftFork = false;
         hasRightFork = false;
+        logger.info("Philosophers have eaten a total of " + localCounter.query() + " times");
     }
 
     /**
@@ -186,6 +192,25 @@ class Philosopher {
             return Direction.RIGHT;
         } else {
             return Direction.LEFT;
+        }
+    }
+
+    /**
+     * Send a request to a neighbor
+     *
+     * @param receivingSocket The socket of the receiving neighbor
+     * @param direction       The direction of the request
+     * @param timestamp       The timestamp of the request
+     */
+    private void sendRequest(Socket receivingSocket, Direction direction, int timestamp) {
+        try {
+            ObjectOutputStream out = new ObjectOutputStream(receivingSocket.getOutputStream());
+            Message requestMessage = new Message(MessageType.REQUEST, this.philosopherId, direction, timestamp);
+            out.writeObject(requestMessage);
+            //out.flush(); hotfix for java.net.SocketException: Connection reset
+            logger.debug("Philosopher " + philosopherId + " sent REQUEST to Philosopher " + reverseDirection(direction) + " with timestamp " + timestamp);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -223,22 +248,6 @@ class Philosopher {
     }
 
     /**
-     * Receive a reply from a neighbor
-     *
-     * @param clientId  The ID of the neighbor
-     * @param direction The direction of the reply
-     */
-    public void receiveReply(int clientId, Direction direction) {
-        if (direction == Direction.LEFT) {
-            logger.debug("Philosopher " + philosopherId + " received REPLY from Philosopher " + clientId + " " + direction);
-            hasLeftFork = true;
-        } else {
-            logger.debug("Philosopher " + philosopherId + " received REPLY from Philosopher " + clientId + " " + direction);
-            hasRightFork = true;
-        }
-    }
-
-    /**
      * Send a reply to a neighbor
      *
      * @param receivingSocket The socket of the receiving neighbor
@@ -257,22 +266,49 @@ class Philosopher {
     }
 
     /**
-     * Send a request to a neighbor
+     * Receive a reply from a neighbor
      *
-     * @param receivingSite The socket of the receiving neighbor
-     * @param direction     The direction of the request
-     * @param timestamp     The timestamp of the request
+     * @param clientId  The ID of the neighbor
+     * @param direction The direction of the reply
      */
-    private void sendRequest(Socket receivingSite, Direction direction, int timestamp) {
+    public void receiveReply(int clientId, Direction direction) {
+        if (direction == Direction.LEFT) {
+            logger.debug("Philosopher " + philosopherId + " received REPLY from Philosopher " + clientId + " " + direction);
+            hasLeftFork = true;
+        } else {
+            logger.debug("Philosopher " + philosopherId + " received REPLY from Philosopher " + clientId + " " + direction);
+            hasRightFork = true;
+        }
+    }
+
+    /**
+     * Send a counter to a neighbor
+     *
+     * @param receivingSocket The socket of the receiving neighbor
+     * @param direction       The direction of the reply
+     */
+    private void sendCounter(Socket receivingSocket, Direction direction, GCounter gCounter) {
         try {
-            ObjectOutputStream out = new ObjectOutputStream(receivingSite.getOutputStream());
-            Message requestMessage = new Message(MessageType.REQUEST, this.philosopherId, direction, timestamp);
-            out.writeObject(requestMessage);
+            ObjectOutputStream out = new ObjectOutputStream(receivingSocket.getOutputStream());
+            Message counterMessage = new Message(MessageType.COUNTER, this.philosopherId, direction, gCounter);
+            out.writeObject(counterMessage);
             //out.flush(); hotfix for java.net.SocketException: Connection reset
-            logger.debug("Philosopher " + philosopherId + " sent REQUEST to Philosopher " + reverseDirection(direction) + " with timestamp " + timestamp);
+            logger.debug("Philosopher " + philosopherId + " sent COUNTER to Philosopher " + reverseDirection(direction));
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Receive a counter from a neighbor
+     *
+     * @param clientId  The ID of the neighbor
+     * @param direction The direction of the counter
+     * @param gCounter  The counter object of the philosopher
+     */
+    public void receiveCounter(int clientId, Direction direction, GCounter gCounter) {
+        logger.debug("Philosopher " + philosopherId + " received COUNTER from Philosopher " + clientId + " " + direction);
+        localCounter.merge(gCounter);
     }
 
     /**

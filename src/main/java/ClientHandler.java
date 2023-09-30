@@ -2,6 +2,7 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
+
 /**
  * A client handler is responsible for handling requests from a client
  */
@@ -9,11 +10,11 @@ class ClientHandler implements Runnable {
     /**
      * The socket of the client
      */
-    private Socket clientSocket;
+    private final Socket clientSocket;
     /**
      * The philosopher that the client handler belongs to
      */
-    private Philosopher philosopher;
+    private final Philosopher philosopher;
 
     /**
      * Create a new client handler
@@ -43,6 +44,8 @@ class ClientHandler implements Runnable {
                         philosopher.receiveRequest(clientSocket, receivedMessage);
                     } else if (receivedMessage.getType() == MessageType.REPLY) {
                         philosopher.receiveReply(receivedMessage.getPhilosopherId(), receivedMessage.getDirection());
+                    } else if (receivedMessage.getType() == MessageType.COUNTER) {
+                        philosopher.receiveCounter(receivedMessage.getPhilosopherId(), receivedMessage.getDirection(), receivedMessage.getGCounter());
                     }
                 } catch (EOFException e) {
                     // Client socket is closed, break out of the loop

@@ -3,5 +3,6 @@
  */
 enum MessageType {
     REQUEST,
-    REPLY
+    REPLY,
+    COUNTER
 }
