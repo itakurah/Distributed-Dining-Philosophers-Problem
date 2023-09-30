@@ -1,26 +1,60 @@
 import java.net.Socket;
 
+/**
+ * A deferred request is a request that has been received but cannot be processed yet
+ */
 class DeferredRequest {
+    /**
+     * The socket of the client that sent the request
+     */
     private Socket socket;
+    /**
+     * The timestamp of the request
+     */
     private int requestTimestamp;
 
-    private String direction;
+    /**
+     * The direction of the request
+     */
+    private Direction direction;
 
-    public DeferredRequest(Socket socket, int requestTimestamp, String direction) {
+    /**
+     * Create a new deferred request
+     *
+     * @param socket           The socket of the client that sent the request
+     * @param requestTimestamp The timestamp of the request
+     * @param direction        The direction of the request
+     */
+    public DeferredRequest(Socket socket, int requestTimestamp, Direction direction) {
         this.socket = socket;
         this.requestTimestamp = requestTimestamp;
         this.direction = direction;
     }
 
+    /**
+     * Get the socket of the client that sent the request
+     *
+     * @return The socket of the client that sent the request
+     */
     public Socket getSocket() {
         return socket;
     }
 
+    /**
+     * Get the timestamp of the request
+     *
+     * @return The timestamp of the request
+     */
     public int getRequestTimestamp() {
         return requestTimestamp;
     }
 
-    public String getDirection() {
+    /**
+     * Get the direction of the request
+     *
+     * @return The direction of the request
+     */
+    public Direction getDirection() {
         return direction;
     }
 
