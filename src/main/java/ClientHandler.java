@@ -2,42 +2,47 @@ import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
-
+/**
+ * A client handler is responsible for handling requests from a client
+ */
 class ClientHandler implements Runnable {
+    /**
+     * The socket of the client
+     */
     private Socket clientSocket;
+    /**
+     * The philosopher that the client handler belongs to
+     */
     private Philosopher philosopher;
 
+    /**
+     * Create a new client handler
+     *
+     * @param clientSocket The socket of the client
+     * @param philosopher  The philosopher that the client handler belongs to
+     */
     public ClientHandler(Socket clientSocket, Philosopher philosopher) {
         this.clientSocket = clientSocket;
         this.philosopher = philosopher;
     }
 
+    /**
+     * Handle requests from the client
+     */
     @Override
     public synchronized void run() {
         try {
-            // Setup input and output streams for communication
-
             while (true) {
                 try {
+                    // Create an object input stream from the client socket
                     ObjectInputStream in = new ObjectInputStream(clientSocket.getInputStream());
                     // Read a message from the client
                     Message receivedMessage = (Message) in.readObject();
-
+                    // Handle the message
                     if (receivedMessage.getType() == MessageType.REQUEST) {
                         philosopher.receiveRequest(clientSocket, receivedMessage);
-                        // Create a new thread to handle the request
-//                        new Thread(() -> philosopher.receiveRequest(
-//                                clientSocket,
-//                                receivedMessage.getTimestamp(),
-//                                receivedMessage.getPhilosopherId(),
-//                                receivedMessage.getDirection()
-//                        )).start();
                     } else if (receivedMessage.getType() == MessageType.REPLY) {
                         philosopher.receiveReply(receivedMessage.getPhilosopherId(), receivedMessage.getDirection());
-//                        new Thread(() -> philosopher.receiveReply(
-//                                receivedMessage.getPhilosopherId(),
-//                                receivedMessage.getDirection()
-//                        )).start();
                     }
                 } catch (EOFException e) {
                     // Client socket is closed, break out of the loop
