@@ -36,3 +36,11 @@ This repository contains an implementation for solving the classic Dining Philos
 
 -   **[IR1]:** If $a \rightarrow b$ [‘a’ happened before ‘b’ within the same process] then, **$C_i(b) = C_i(a) + d$**
 -   **[IR2]:** $C_j = \max(C_j, tm + 1)$ [If there's more number of processes, then $tm = \text{value of } C_i(a)$, $C_j = \max \text{ value between } C_j \text{ and } tm + d$]
+## [G-Counter (Grow-only Counter)](https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type "G-Counter")
+The G-Counter is designed to maintain a counter for a cluster comprising 'n' nodes. Within this cluster, each node is allocated a unique ID ranging from 0 to n - 1. Consequently, every node is granted its own designated slot in the 'P' array, which it independently increments. Updates are continuously disseminated in the background and subsequently merged by determining the maximum value from all elements within the 'P' array. The 'merge' function is characterized by being commutative, associative, and idempotent. The 'query' function returns the total sum of the counter.
+
+# Sources
+- https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type
+- https://en.wikipedia.org/wiki/Ricart%E2%80%93Agrawala_algorithm
+- https://en.wikipedia.org/wiki/Lamport_timestamp
+
