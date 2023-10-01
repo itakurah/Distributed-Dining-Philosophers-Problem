@@ -28,5 +28,11 @@ public class Application {
                 philosopher.releaseForks();
             }
         }).start();
+
+        new Thread(() -> {
+            while (true) {
+                philosopher.updateNeighborCounter();
+            }
+        }).start();
     }
 }
