@@ -25,12 +25,15 @@ public class GenerateCompose {
                 }
                 writer.write("  app" + i + ":\n");
                 writer.write("    image: ddpp:latest\n");
-                writer.write("    command: ['java', '-jar', '/app/Application.jar', '" + i + "', '" + leftNeighborPort + "', 'localhost', '" + ((isFirst)?leftNeighborPort+Integer.parseInt(args[0])-1:leftNeighborPort-1) + "', 'localhost', '"+((isLast)?serverPort+1:leftNeighborPort+1)+"']\n");
-                writer.write("    ports:\n");
-                writer.write("      - '" + leftNeighborPort + ":5000'\n");
+                writer.write("    command: ['java', '-jar', '/usr/app/vs-1.0-SNAPSHOT.jar', '" + i + "', '" + leftNeighborPort + "', '" + (isFirst ? "app" + numInstances : "app" + (i-1)) + "', '" + (isFirst ? leftNeighborPort + Integer.parseInt(args[0]) - 1 : leftNeighborPort - 1) + "', '" + (isLast ? "app" + (numInstances-i+1) : "app" + (i+1)) + "', '" + (isLast ? serverPort + 1 : leftNeighborPort + 1) + "']\n");
+                writer.write("    networks:\n");
+                writer.write("      - network\n");
                 isFirst = false;
 
             }
+            writer.write("networks:\n");
+            writer.write("  network:\n");
+            writer.write("    driver: bridge");
 
             System.out.println("docker-compose.yml file with " + numInstances + " instances of app2 has been generated.");
         } catch (IOException e) {
