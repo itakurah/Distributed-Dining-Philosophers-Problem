@@ -70,6 +70,11 @@ class Philosopher {
     private final GCounter localCounter = new GCounter(philosopherId);
 
     /**
+     * The interval between updates sent to neighbors in milliseconds
+     */
+    private final int UPDATE_INTERVAL = 1000;
+
+    /**
      * Constructor for the Philosopher class
      *
      * @param philosopherId The ID of the philosopher
@@ -100,9 +105,6 @@ class Philosopher {
     public void eat() {
         // Increment the local counter
         localCounter.increment();
-        // Send the counter to the neighbors
-        sendCounter(rightNeighborSocket, Direction.LEFT, localCounter);
-        sendCounter(leftNeighborSocket, Direction.RIGHT, localCounter);
         logger.info("Philosopher " + philosopherId + " is eating.");
         try {
             Thread.sleep(new Random().nextInt(eatInterval[0] - eatInterval[1] + 1) + eatInterval[1]);
@@ -297,6 +299,20 @@ class Philosopher {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Update the neighbor counter every 1 second
+     */
+    public void updateNeighborCounter(){
+        // Send the counter to the neighbors
+        try {
+            Thread.sleep(UPDATE_INTERVAL);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        sendCounter(rightNeighborSocket, Direction.LEFT, localCounter);
+        sendCounter(leftNeighborSocket, Direction.RIGHT, localCounter);
     }
 
     /**
