@@ -30,6 +30,18 @@ class Philosopher {
      */
     private final int[] thinkInterval = new int[]{30000, 5000};
     /**
+     * The Lamport clock of the philosopher
+     */
+    private final LamportClock lamportClock = new LamportClock();
+    /**
+     * The queue of deferred requests
+     */
+    private final BlockingQueue<DeferredRequest> deferredRequests = new LinkedBlockingQueue<>(2);
+    /**
+     * The interval between updates sent to neighbors in milliseconds
+     */
+    private final int UPDATE_INTERVAL = 1000;
+    /**
      * The maximum number of retries
      */
     int maxRetries = 20;
@@ -42,9 +54,9 @@ class Philosopher {
      */
     private int philosopherId;
     /**
-     * The Lamport clock of the philosopher
+     * The local counter of the philosopher
      */
-    private final LamportClock lamportClock = new LamportClock();
+    private final GCounter localCounter = new GCounter(philosopherId);
     /**
      * The left fork of the philosopher
      */
@@ -60,19 +72,6 @@ class Philosopher {
      */
     private boolean inCriticalSection;
     private boolean isRequesting;
-    /**
-     * The queue of deferred requests
-     */
-    private final BlockingQueue<DeferredRequest> deferredRequests = new LinkedBlockingQueue<>(2);
-    /**
-     * The local counter of the philosopher
-     */
-    private final GCounter localCounter = new GCounter(philosopherId);
-
-    /**
-     * The interval between updates sent to neighbors in milliseconds
-     */
-    private final int UPDATE_INTERVAL = 1000;
 
     /**
      * Constructor for the Philosopher class
@@ -95,7 +94,7 @@ class Philosopher {
         try {
             Thread.sleep(new Random().nextInt(thinkInterval[0] - thinkInterval[1] + 1) + thinkInterval[1]);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            logger.error("An error occurred while thinking", e);
         }
     }
 
@@ -109,7 +108,7 @@ class Philosopher {
         try {
             Thread.sleep(new Random().nextInt(eatInterval[0] - eatInterval[1] + 1) + eatInterval[1]);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            logger.error("An error occurred while eating", e);
         }
     }
 
@@ -138,7 +137,7 @@ class Philosopher {
             try {
                 Thread.sleep(1000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                logger.error("An error occurred while waiting for forks", e);
             }
             if (hasLeftFork && !printedLeftForkMessage) {
                 logger.info("Philosopher " + philosopherId + " has left fork.");
@@ -212,7 +211,7 @@ class Philosopher {
             //out.flush(); hotfix for java.net.SocketException: Connection reset
             logger.debug("Philosopher " + philosopherId + " sent REQUEST to Philosopher " + reverseDirection(direction) + " with timestamp " + timestamp);
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("An error occurred while sending a request", e);
         }
     }
 
@@ -263,7 +262,7 @@ class Philosopher {
             //out.flush(); hotfix for java.net.SocketException: Connection reset
             logger.debug("Philosopher " + philosopherId + " sent REPLY to Philosopher " + reverseDirection(direction));
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("An error occurred while sending a reply", e);
         }
     }
 
@@ -297,14 +296,14 @@ class Philosopher {
             //out.flush(); hotfix for java.net.SocketException: Connection reset
             logger.debug("Philosopher " + philosopherId + " sent COUNTER to Philosopher " + reverseDirection(direction));
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("An error occurred while sending a counter", e);
         }
     }
 
     /**
      * Update the neighbor counter every 1 second
      */
-    public void updateNeighborCounter(){
+    public void updateNeighborCounter() {
         // Send the counter to the neighbors
         try {
             Thread.sleep(UPDATE_INTERVAL);
@@ -328,57 +327,30 @@ class Philosopher {
     }
 
     /**
-     * Connect to the left neighbor
+     * Connect to a neighbor
      *
-     * @param leftNeighborAddress The address of the left neighbor
+     * @param neighborAddress The address of a neighbor
      */
-    public void connectToLeftNeighbor(InetSocketAddress leftNeighborAddress) {
-        int maxRetries = 5;
-        int retryIntervalMillis = 2000; // 5 seconds
+    public void connectToNeighbor(InetSocketAddress neighborAddress, Direction direction) {
         for (int retryCount = 1; retryCount <= maxRetries; retryCount++) {
             try {
-                leftNeighborSocket = new Socket(leftNeighborAddress.getAddress(), leftNeighborAddress.getPort());
-                logger.debug("Connected to neighbor: " + leftNeighborSocket);
-                break;
-            } catch (IOException e) {
-                // Print the error and retry after the interval
-                logger.debug("Could not connect to neighbors");
-                if (retryCount < maxRetries) {
-                    logger.debug("Retrying in " + retryIntervalMillis / 1000 + " seconds...");
-                    try {
-                        Thread.sleep(retryIntervalMillis);
-                    } catch (InterruptedException ex) {
-                        ex.printStackTrace();
-                    }
+                if (direction == Direction.LEFT) {
+                    leftNeighborSocket = new Socket(neighborAddress.getAddress(), neighborAddress.getPort());
+                    logger.debug("Connected to neighbor: " + leftNeighborSocket);
                 } else {
-                    logger.error("Failed to connect after " + maxRetries + " retries.");
-                    System.exit(1);
+                    rightNeighborSocket = new Socket(neighborAddress.getAddress(), neighborAddress.getPort());
+                    logger.debug("Connected to neighbor: " + rightNeighborSocket);
                 }
-            }
-        }
-    }
-
-    /**
-     * Connect to the right neighbor
-     *
-     * @param rightNeighborAddress The address of the right neighbor
-     */
-    public void connectToRightNeighbor(InetSocketAddress rightNeighborAddress) {
-        for (int retryCount = 1; retryCount <= maxRetries; retryCount++) {
-            try {
-                rightNeighborSocket = new Socket(rightNeighborAddress.getAddress(), rightNeighborAddress.getPort());
-                logger.debug("Connected to neighbor: " + rightNeighborSocket);
                 break;
             } catch (IOException e) {
                 // Print the error and retry after the interval
                 logger.debug("Could not connect to neighbors");
-                //e.printStackTrace();
                 if (retryCount < maxRetries) {
                     logger.debug("Retrying in " + retryIntervalMillis / 1000 + " seconds...");
                     try {
                         Thread.sleep(retryIntervalMillis);
                     } catch (InterruptedException ex) {
-                        ex.printStackTrace();
+                        logger.error("An error occurred while connecting to the left neighbor", ex);
                     }
                 } else {
                     logger.error("Failed to connect after " + maxRetries + " retries.");

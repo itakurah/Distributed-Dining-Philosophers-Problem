@@ -7,16 +7,16 @@ class DeferredRequest {
     /**
      * The socket of the client that sent the request
      */
-    private Socket socket;
+    private final Socket socket;
     /**
      * The timestamp of the request
      */
-    private int requestTimestamp;
+    private final int requestTimestamp;
 
     /**
      * The direction of the request
      */
-    private Direction direction;
+    private final Direction direction;
 
     /**
      * Create a new deferred request

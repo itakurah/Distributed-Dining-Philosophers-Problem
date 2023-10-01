@@ -1,3 +1,6 @@
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -7,6 +10,10 @@ import java.net.Socket;
  * A client handler is responsible for handling requests from a client
  */
 class ClientHandler implements Runnable {
+    /**
+     * The logger for the ClientHandler class
+     */
+    private static final Logger logger = LoggerFactory.getLogger(ClientHandler.class);
     /**
      * The socket of the client
      */
@@ -53,12 +60,12 @@ class ClientHandler implements Runnable {
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            logger.error("Error while handling client request", e);
         } finally {
             try {
                 clientSocket.close();
             } catch (IOException e) {
-                e.printStackTrace();
+                logger.error("Error while closing client socket", e);
             }
         }
     }

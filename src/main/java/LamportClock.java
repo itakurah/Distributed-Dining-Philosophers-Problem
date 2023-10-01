@@ -8,7 +8,7 @@ class LamportClock implements Serializable {
     /**
      * The current Lamport timestamp
      */
-    private AtomicInteger timestamp;
+    private final AtomicInteger timestamp;
 
     /**
      * Create a new Lamport clock
@@ -19,6 +19,7 @@ class LamportClock implements Serializable {
 
     /**
      * Get the current Lamport timestamp
+     *
      * @return The current Lamport timestamp
      */
     public synchronized int getTimestamp() {
@@ -34,6 +35,7 @@ class LamportClock implements Serializable {
 
     /**
      * Synchronize the Lamport timestamp with a received timestamp
+     *
      * @param receivedTimestamp The received timestamp
      */
     public void synchronize(int receivedTimestamp) {
@@ -44,6 +46,7 @@ class LamportClock implements Serializable {
 
     /**
      * Compare the Lamport timestamp with another timestamp
+     *
      * @param otherTimestamp The other timestamp
      * @return -1 if the Lamport timestamp is smaller, 0 if they are equal, 1 if the Lamport timestamp is larger
      */

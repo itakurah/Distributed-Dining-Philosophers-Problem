@@ -20,12 +20,12 @@ public class GenerateCompose {
             for (int i = 1; i <= numInstances; i++) {
                 int leftNeighborPort = serverPort + i;
                 int rightNeighborPort = serverPort + i + 2;
-                if(i == numInstances) {
+                if (i == numInstances) {
                     isLast = true;
                 }
                 writer.write("  app" + i + ":\n");
                 writer.write("    image: ddpp:latest\n");
-                writer.write("    command: ['java', '-jar', '/usr/app/vs-1.0-SNAPSHOT.jar', '" + i + "', '" + leftNeighborPort + "', '" + (isFirst ? "app" + numInstances : "app" + (i-1)) + "', '" + (isFirst ? leftNeighborPort + Integer.parseInt(args[0]) - 1 : leftNeighborPort - 1) + "', '" + (isLast ? "app" + (numInstances-i+1) : "app" + (i+1)) + "', '" + (isLast ? serverPort + 1 : leftNeighborPort + 1) + "']\n");
+                writer.write("    command: ['java', '-jar', '/usr/app/vs-1.0-SNAPSHOT.jar', '" + i + "', '" + leftNeighborPort + "', '" + (isFirst ? "app" + numInstances : "app" + (i - 1)) + "', '" + (isFirst ? leftNeighborPort + Integer.parseInt(args[0]) - 1 : leftNeighborPort - 1) + "', '" + (isLast ? "app" + (numInstances - i + 1) : "app" + (i + 1)) + "', '" + (isLast ? serverPort + 1 : leftNeighborPort + 1) + "']\n");
                 writer.write("    networks:\n");
                 writer.write("      - network\n");
                 isFirst = false;

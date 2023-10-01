@@ -13,6 +13,10 @@ import java.util.concurrent.Executors;
  */
 public class Server {
     /**
+     * The logger for the server class
+     */
+    private static final Logger logger = LoggerFactory.getLogger(Server.class);
+    /**
      * The port that the server listens on
      */
     private final int PORT;
@@ -24,10 +28,6 @@ public class Server {
      * The philosopher that the server belongs to
      */
     private final Philosopher philosopher;
-    /**
-     * The logger for the server
-     */
-    private static final Logger logger = LoggerFactory.getLogger(Server.class);
     /**
      * A latch that is used to wait for the server to finish
      */
@@ -66,7 +66,7 @@ public class Server {
                         // Delegate client handling to a thread from the thread pool
                         executorService.execute(new ClientHandler(socket, philosopher));
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        logger.error("Error accepting client connection", e);
                     }
                 }
             } catch (IOException e) {

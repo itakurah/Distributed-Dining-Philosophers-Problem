@@ -13,13 +13,13 @@ class Message implements Serializable {
      */
     private final int philosopherId;
     /**
-     * The timestamp of the message
-     */
-    private int timestamp;
-    /**
      * The direction of the message
      */
     private final Direction direction;
+    /**
+     * The timestamp of the message
+     */
+    private int timestamp;
     /**
      * The counter object of the message
      */
