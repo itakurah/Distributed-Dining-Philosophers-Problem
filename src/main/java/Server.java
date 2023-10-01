@@ -1,5 +1,5 @@
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -27,7 +27,7 @@ public class Server {
     /**
      * The logger for the server
      */
-    private static final Logger logger = LogManager.getLogger(Server.class);
+    private static final Logger logger = LoggerFactory.getLogger(Server.class);
     /**
      * A latch that is used to wait for the server to finish
      */

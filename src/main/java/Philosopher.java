@@ -1,5 +1,5 @@
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -16,7 +16,7 @@ class Philosopher {
     /**
      * The logger for the Philosopher class
      */
-    private static final Logger logger = LogManager.getLogger(Philosopher.class);
+    private static final Logger logger = LoggerFactory.getLogger(Philosopher.class);
     /**
      * The interval for eating
      * The first element is the maximum time in milliseconds
@@ -168,7 +168,7 @@ class Philosopher {
         // Release forks to neighbors
         while (!deferredRequests.isEmpty()) {
             DeferredRequest request = deferredRequests.poll();
-            logger.debug(request);
+            logger.debug(String.valueOf(request));
             if (request.getDirection() == Direction.LEFT) {
                 sendReply(leftNeighborSocket, reverseDirection(request.getDirection()));
             } else {
