@@ -18,6 +18,14 @@ class Philosopher {
      */
     private static final Logger logger = LoggerFactory.getLogger(Philosopher.class);
     /**
+     * The maximum number of retries
+     */
+    final int NUM_OF_RETRIES = 20;
+    /**
+     * The interval between retries in milliseconds
+     */
+    final int RETRY_INTERVAL = 2000;
+    /**
      * The interval for eating
      * The first element is the maximum time in milliseconds
      * The second element is the minimum time in milliseconds
@@ -42,14 +50,6 @@ class Philosopher {
      */
     private final int UPDATE_INTERVAL = 1000;
     private final int PING_INTERVAL = 5000;
-    /**
-     * The maximum number of retries
-     */
-    final int NUM_OF_RETRIES = 20;
-    /**
-     * The interval between retries in milliseconds
-     */
-    final int RETRY_INTERVAL = 2000;
     /**
      * The ID of the philosopher
      */
@@ -425,6 +425,7 @@ class Philosopher {
             logger.debug("Philosopher " + philosopherId + " received PING from Philosopher " + clientId + " " + direction);
         }
     }
+
     /**
      * Receive a ping back from a neighbor
      *
