@@ -1,12 +1,12 @@
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.EOFException;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
  * A server is responsible for accepting client connections and delegating client handling to a thread from the thread pool
@@ -20,10 +20,6 @@ public class Server {
      * The port that the server listens on
      */
     private final int PORT;
-    /**
-     * The thread pool that the server uses for handling clients
-     */
-    private final ExecutorService executorService;
     /**
      * The philosopher that the server belongs to
      */
@@ -40,16 +36,15 @@ public class Server {
      * @param port        The port that the server listens on
      */
     public Server(Philosopher philosopher, int port) {
-        this.executorService = Executors.newFixedThreadPool(2);
         this.philosopher = philosopher;
         this.PORT = port;
         this.serverLatch = new CountDownLatch(1); // Initialize the latch
     }
 
     /**
-     * Start the server
+     * Start the server listener
      */
-    public void start() {
+    public void startListener() {
         new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(PORT)) {
                 logger.debug("Server started on port " + PORT);
@@ -63,8 +58,8 @@ public class Server {
                         // Increment the connectedClients counter
                         connectedClients++;
                         logger.debug("Client connected (" + connectedClients + " total): " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
-                        // Delegate client handling to a thread from the thread pool
-                        executorService.execute(new ClientHandler(socket, philosopher));
+                        // Create new thread for message handling per socket
+                        messageHandler(socket, philosopher);
                     } catch (IOException e) {
                         logger.error("Error accepting client connection", e);
                     }
@@ -73,6 +68,51 @@ public class Server {
                 throw new RuntimeException(e);
             } finally {
                 serverLatch.countDown(); // Count down the latch when the server finishes
+            }
+        }).start();
+    }
+
+    /**
+     * Handle messages from the client
+     *
+     * @param clientSocket The socket of the client
+     * @param philosopher  The philosopher that the client handler belongs to
+     */
+    public void messageHandler(Socket clientSocket, Philosopher philosopher) {
+        new Thread(() -> {
+            try {
+                ObjectInputStream in;
+                while (true) {
+                    try {
+                        // Create an object input stream from the client socket
+                        in = new ObjectInputStream(clientSocket.getInputStream());
+                        // Read a message from the client
+                        Message receivedMessage = (Message) in.readObject();
+                        // Handle the message
+                        if (receivedMessage.getType() == MessageType.REQUEST) {
+                            philosopher.receiveRequest(clientSocket, receivedMessage);
+                        } else if (receivedMessage.getType() == MessageType.REPLY) {
+                            philosopher.receiveReply(receivedMessage.getPhilosopherId(), receivedMessage.getDirection());
+                        } else if (receivedMessage.getType() == MessageType.COUNTER) {
+                            philosopher.receiveCounter(receivedMessage.getPhilosopherId(), receivedMessage.getDirection(), receivedMessage.getGCounter());
+                        } else if (receivedMessage.getType() == MessageType.S_PING) {
+                            philosopher.receiveSPing(receivedMessage.getPhilosopherId(), receivedMessage.getDirection());
+                        } else if (receivedMessage.getType() == MessageType.R_PING) {
+                            philosopher.receiveRPing(receivedMessage.getPhilosopherId(), receivedMessage.getDirection());
+                        }
+                    } catch (EOFException e) {
+                        logger.error("Error while handling client request", e);
+                        break;
+                    }
+                }
+            } catch (IOException | ClassNotFoundException e) {
+                logger.error("Error while handling client request", e);
+            } finally {
+                try {
+                    clientSocket.close();
+                } catch (IOException e) {
+                    logger.error("Error while closing client socket", e);
+                }
             }
         }).start();
     }
