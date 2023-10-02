@@ -38,7 +38,7 @@ class LamportClock implements Serializable {
      *
      * @param receivedTimestamp The received timestamp
      */
-    public void synchronize(int receivedTimestamp) {
+    public synchronized void synchronize(int receivedTimestamp) {
         int currentTimestamp = timestamp.get();
         int newTimestamp = Math.max(currentTimestamp, receivedTimestamp) + 1;
         timestamp.set(newTimestamp);
