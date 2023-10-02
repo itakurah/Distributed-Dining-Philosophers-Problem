@@ -20,5 +20,5 @@ WORKDIR $APP_HOME
 # Copy the JAR file from the build stage to the final image
 COPY --from=build $APP_HOME/target/$ARTIFACT_NAME .
 
-# Define the command to run your Java application
+# Run Java application
 CMD ["java", "-jar", "Application.java"]
