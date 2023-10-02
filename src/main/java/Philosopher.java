@@ -28,7 +28,7 @@ class Philosopher {
      * The first element is the maximum time in milliseconds
      * The second element is the minimum time in milliseconds
      */
-    private final int[] thinkInterval = new int[]{30000, 5000};
+    private final int[] thinkInterval = new int[]{10000, 5000};
     /**
      * The Lamport clock of the philosopher
      */
@@ -41,14 +41,15 @@ class Philosopher {
      * The interval between updates sent to neighbors in milliseconds
      */
     private final int UPDATE_INTERVAL = 1000;
+    private final int PING_INTERVAL = 5000;
     /**
      * The maximum number of retries
      */
-    int maxRetries = 20;
+    final int NUM_OF_RETRIES = 20;
     /**
      * The interval between retries in milliseconds
      */
-    int retryIntervalMillis = 1000;
+    final int RETRY_INTERVAL = 2000;
     /**
      * The ID of the philosopher
      */
@@ -72,6 +73,11 @@ class Philosopher {
      */
     private boolean inCriticalSection;
     private boolean isRequesting;
+    /**
+     * The state of the ping
+     */
+    private boolean receivedPingLeft = false;
+    private boolean receivedPingRight = false;
 
     /**
      * Constructor for the Philosopher class
@@ -197,19 +203,46 @@ class Philosopher {
     }
 
     /**
+     * Send a ping to neighbors
+     */
+    public void requestPing() {
+        new Thread(() -> {
+            while (true) {
+                try {
+                    sendSPing(leftNeighborSocket, Direction.RIGHT);
+                    sendSPing(rightNeighborSocket, Direction.LEFT);
+                    Thread.sleep(PING_INTERVAL);
+                    System.out.println("ff");
+                    if (!(isReceivedPingLeft() && isReceivedPingRight())) {
+                        logger.error("Philosopher " + philosopherId + " has not received a ping back from his neighbors");
+                        logger.error("Philosopher " + philosopherId + " left the table");
+                        System.exit(0);
+                    }
+                    setReceivedPingLeft(false);
+                    setReceivedPingRight(false);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();
+    }
+
+    /**
      * Send a request to a neighbor
      *
      * @param receivingSocket The socket of the receiving neighbor
      * @param direction       The direction of the request
      * @param timestamp       The timestamp of the request
      */
-    private void sendRequest(Socket receivingSocket, Direction direction, int timestamp) {
+    private synchronized void sendRequest(Socket receivingSocket, Direction direction, int timestamp) {
+        ObjectOutputStream out;
         try {
-            ObjectOutputStream out = new ObjectOutputStream(receivingSocket.getOutputStream());
+            out = new ObjectOutputStream(receivingSocket.getOutputStream());
             Message requestMessage = new Message(MessageType.REQUEST, this.philosopherId, direction, timestamp);
             out.writeObject(requestMessage);
             //out.flush(); hotfix for java.net.SocketException: Connection reset
             logger.debug("Philosopher " + philosopherId + " sent REQUEST to Philosopher " + reverseDirection(direction) + " with timestamp " + timestamp);
+
         } catch (IOException e) {
             logger.error("An error occurred while sending a request", e);
         }
@@ -221,7 +254,7 @@ class Philosopher {
      * @param requestingSocket The socket of the requesting neighbor
      * @param receivedMessage  The message received from the neighbor
      */
-    public void receiveRequest(Socket requestingSocket, Message receivedMessage) {
+    public synchronized void receiveRequest(Socket requestingSocket, Message receivedMessage) {
         // Get current timestamp
         int timestamp = lamportClock.getTimestamp();
         // On receiving a request, update the local Lamport timestamp
@@ -254,9 +287,10 @@ class Philosopher {
      * @param receivingSocket The socket of the receiving neighbor
      * @param direction       The direction of the reply
      */
-    private void sendReply(Socket receivingSocket, Direction direction) {
+    private synchronized void sendReply(Socket receivingSocket, Direction direction) {
+        ObjectOutputStream out;
         try {
-            ObjectOutputStream out = new ObjectOutputStream(receivingSocket.getOutputStream());
+            out = new ObjectOutputStream(receivingSocket.getOutputStream());
             Message replyMessage = new Message(MessageType.REPLY, this.philosopherId, direction);
             out.writeObject(replyMessage);
             //out.flush(); hotfix for java.net.SocketException: Connection reset
@@ -272,7 +306,7 @@ class Philosopher {
      * @param clientId  The ID of the neighbor
      * @param direction The direction of the reply
      */
-    public void receiveReply(int clientId, Direction direction) {
+    public synchronized void receiveReply(int clientId, Direction direction) {
         if (direction == Direction.LEFT) {
             logger.debug("Philosopher " + philosopherId + " received REPLY from Philosopher " + clientId + " " + direction);
             hasLeftFork = true;
@@ -288,30 +322,40 @@ class Philosopher {
      * @param receivingSocket The socket of the receiving neighbor
      * @param direction       The direction of the reply
      */
-    private void sendCounter(Socket receivingSocket, Direction direction, GCounter gCounter) {
+    private synchronized void sendCounter(Socket receivingSocket, Direction direction, GCounter gCounter) {
+        ObjectOutputStream out;
         try {
-            ObjectOutputStream out = new ObjectOutputStream(receivingSocket.getOutputStream());
+            //possible workaround for java.io.StreamCorruptedException: invalid type code: AC
+            //send multiple messages concurrently causes the stream to be corrupted
+            //locks the object so only one thread
+            //SEE: sendReply(), sendRequest()
+            out = new ObjectOutputStream(receivingSocket.getOutputStream());
             Message counterMessage = new Message(MessageType.COUNTER, this.philosopherId, direction, gCounter);
             out.writeObject(counterMessage);
             //out.flush(); hotfix for java.net.SocketException: Connection reset
             logger.debug("Philosopher " + philosopherId + " sent COUNTER to Philosopher " + reverseDirection(direction));
+
         } catch (IOException e) {
             logger.error("An error occurred while sending a counter", e);
         }
     }
 
     /**
-     * Update the neighbor counter every 1 second
+     * Update the neighbor G-Counter
      */
     public void updateNeighborCounter() {
-        // Send the counter to the neighbors
-        try {
-            Thread.sleep(UPDATE_INTERVAL);
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        sendCounter(rightNeighborSocket, Direction.LEFT, localCounter);
-        sendCounter(leftNeighborSocket, Direction.RIGHT, localCounter);
+        new Thread(() -> {
+            while (true) {
+                // Send the counter to the neighbors
+                try {
+                    Thread.sleep(UPDATE_INTERVAL);
+                    sendCounter(rightNeighborSocket, Direction.LEFT, localCounter);
+                    sendCounter(leftNeighborSocket, Direction.RIGHT, localCounter);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();
     }
 
     /**
@@ -321,9 +365,80 @@ class Philosopher {
      * @param direction The direction of the counter
      * @param gCounter  The counter object of the philosopher
      */
-    public void receiveCounter(int clientId, Direction direction, GCounter gCounter) {
+    public synchronized void receiveCounter(int clientId, Direction direction, GCounter gCounter) {
         logger.debug("Philosopher " + philosopherId + " received COUNTER from Philosopher " + clientId + " " + direction);
         localCounter.merge(gCounter);
+    }
+
+    /**
+     * Send a ping to a neighbor
+     *
+     * @param receivingSocket The socket of the receiving neighbor
+     * @param direction       The direction of the ping
+     */
+    public synchronized void sendSPing(Socket receivingSocket, Direction direction) {
+        ObjectOutputStream out;
+        try {
+            out = new ObjectOutputStream(receivingSocket.getOutputStream());
+            Message replyMessage = new Message(MessageType.S_PING, this.philosopherId, direction);
+            out.writeObject(replyMessage);
+            //out.flush(); hotfix for java.net.SocketException: Connection reset
+            logger.debug("Philosopher " + philosopherId + " sent S_PING to Philosopher " + reverseDirection(direction));
+
+        } catch (IOException e) {
+            logger.error("An error occurred while sending a ping", e);
+        }
+    }
+
+    /**
+     * Send a ping back to a neighbor
+     *
+     * @param receivingSocket The socket of the receiving neighbor
+     * @param direction       The direction of the ping
+     */
+    public synchronized void sendRPing(Socket receivingSocket, Direction direction) {
+        ObjectOutputStream out;
+        try {
+            out = new ObjectOutputStream(receivingSocket.getOutputStream());
+            Message replyMessage = new Message(MessageType.R_PING, this.philosopherId, direction);
+            out.writeObject(replyMessage);
+            //out.flush(); hotfix for java.net.SocketException: Connection reset
+            logger.debug("Philosopher " + philosopherId + " sent R_PING to Philosopher " + reverseDirection(direction));
+
+        } catch (IOException e) {
+            logger.error("An error occurred while sending a ping", e);
+        }
+    }
+
+    /**
+     * Receive a ping from a neighbor
+     *
+     * @param clientId  The ID of the neighbor
+     * @param direction The direction of the ping
+     */
+    public synchronized void receiveSPing(int clientId, Direction direction) {
+        if (direction == Direction.LEFT) {
+            sendRPing(leftNeighborSocket, reverseDirection(direction));
+            logger.debug("Philosopher " + philosopherId + " received PING from Philosopher " + clientId + " " + direction);
+        } else {
+            sendRPing(rightNeighborSocket, reverseDirection(direction));
+            logger.debug("Philosopher " + philosopherId + " received PING from Philosopher " + clientId + " " + direction);
+        }
+    }
+    /**
+     * Receive a ping back from a neighbor
+     *
+     * @param clientId  The ID of the neighbor
+     * @param direction The direction of the ping
+     */
+    public synchronized void receiveRPing(int clientId, Direction direction) {
+        if (direction == Direction.LEFT) {
+            setReceivedPingRight(true);
+            logger.debug("Philosopher " + philosopherId + " received PING from Philosopher " + clientId + " " + direction);
+        } else {
+            setReceivedPingLeft(true);
+            logger.debug("Philosopher " + philosopherId + " received PING from Philosopher " + clientId + " " + direction);
+        }
     }
 
     /**
@@ -332,7 +447,7 @@ class Philosopher {
      * @param neighborAddress The address of a neighbor
      */
     public void connectToNeighbor(InetSocketAddress neighborAddress, Direction direction) {
-        for (int retryCount = 1; retryCount <= maxRetries; retryCount++) {
+        for (int retryCount = 1; retryCount <= NUM_OF_RETRIES; retryCount++) {
             try {
                 if (direction == Direction.LEFT) {
                     leftNeighborSocket = new Socket(neighborAddress.getAddress(), neighborAddress.getPort());
@@ -345,15 +460,15 @@ class Philosopher {
             } catch (IOException e) {
                 // Print the error and retry after the interval
                 logger.debug("Could not connect to neighbors");
-                if (retryCount < maxRetries) {
-                    logger.debug("Retrying in " + retryIntervalMillis / 1000 + " seconds...");
+                if (retryCount < NUM_OF_RETRIES) {
+                    logger.debug("Retrying in " + RETRY_INTERVAL / 1000 + " seconds...");
                     try {
-                        Thread.sleep(retryIntervalMillis);
+                        Thread.sleep(RETRY_INTERVAL);
                     } catch (InterruptedException ex) {
                         logger.error("An error occurred while connecting to the left neighbor", ex);
                     }
                 } else {
-                    logger.error("Failed to connect after " + maxRetries + " retries.");
+                    logger.error("Failed to connect after " + NUM_OF_RETRIES + " retries.");
                     System.exit(1);
                 }
             }
@@ -394,5 +509,21 @@ class Philosopher {
      */
     public synchronized void setRequesting(boolean requesting) {
         isRequesting = requesting;
+    }
+
+    public synchronized boolean isReceivedPingLeft() {
+        return receivedPingLeft;
+    }
+
+    public synchronized void setReceivedPingLeft(boolean receivedPingLeft) {
+        this.receivedPingLeft = receivedPingLeft;
+    }
+
+    public synchronized boolean isReceivedPingRight() {
+        return receivedPingRight;
+    }
+
+    public synchronized void setReceivedPingRight(boolean receivedPingRight) {
+        this.receivedPingRight = receivedPingRight;
     }
 }
