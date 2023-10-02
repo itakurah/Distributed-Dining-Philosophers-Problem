@@ -35,7 +35,7 @@ public class GenerateCompose {
             writer.write("  network:\n");
             writer.write("    driver: bridge");
 
-            System.out.println("docker-compose.yml file with " + numInstances + " instances of app2 has been generated.");
+            System.out.println("docker-compose.yml file with " + numInstances + " instances of philosophers has been generated.");
         } catch (IOException e) {
             e.printStackTrace();
         }
