@@ -4,5 +4,7 @@
 enum MessageType {
     REQUEST,
     REPLY,
-    COUNTER
+    COUNTER,
+    S_PING,
+    R_PING
 }
