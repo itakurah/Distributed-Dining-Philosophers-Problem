@@ -3,7 +3,7 @@
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout
-                    pattern="%highlight{[%d{HH:mm:ss.SSS}][%-5level]}{FATAL=red, ERROR=red, WARN=yellow, INFO=blue, DEBUG=green} -> %highlight{%msg}{FATAL=red, ERROR=red, WARN=yellow, INFO=blue, DEBUG=green}%n"/>
+                    pattern="%highlight{[%d{HH:mm:ss.SSS}][%level]}{FATAL=red, ERROR=red, WARN=yellow, INFO=blue, DEBUG=green} -> %highlight{%msg}{FATAL=red, ERROR=red, WARN=yellow, INFO=blue, DEBUG=green}%n"/>
         </Console>
     </Appenders>
     <Loggers>
