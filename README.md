@@ -2,6 +2,14 @@
 # Distributed Dining Philosophers Problem
 This repository contains an implementation for solving the classic Dining Philosophers problem in a peer-to-peer (P2P) environment, using the Ricart-Agrawala Algorithm for mutual exclusion with the Roucairol-Carvalho optimization along with Lamport's Logical Clocks.
 
+## Overview
+<img src="https://raw.githubusercontent.com/itakurah/Distributed-Dining-Philosophers-Problem/main/images/table.jpg" width=80% height=80%>
+
+Sources:
+- *https://www.flaticon.com/free-icon/philosophy_2178189*
+- *https://www.freepik.com/icon/fork-diagonal_45433*
+
+
 ## [Ricart-Agrawala Algorithm](https://en.wikipedia.org/wiki/Ricart%E2%80%93Agrawala_algorithm "Ricart-Agrawala Algorithm")
 **Requesting Site**
 
