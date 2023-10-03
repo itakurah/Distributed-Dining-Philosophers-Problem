@@ -12,7 +12,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 /**
  * The Philosopher class represents a philosopher in the dining philosophers problem
  */
-class Philosopher {
+public class Philosopher {
     /**
      * The logger for the Philosopher class
      */
@@ -36,7 +36,7 @@ class Philosopher {
      * The first element is the maximum time in milliseconds
      * The second element is the minimum time in milliseconds
      */
-    private final int[] thinkInterval = new int[]{10000, 5000};
+    private final int[] thinkInterval = new int[]{100000, 5000};
     /**
      * The Lamport clock of the philosopher
      */
@@ -78,6 +78,8 @@ class Philosopher {
      */
     private boolean receivedPingLeft = false;
     private boolean receivedPingRight = false;
+
+    private boolean hasReply = true;
 
     /**
      * Constructor for the Philosopher class
@@ -124,36 +126,45 @@ class Philosopher {
     public void requestForks() {
         // On request, update the Lamport timestamp
         lamportClock.update();
-        // Requesting forks
-        setRequesting(true);
-        // Get the current Lamport timestamp
-        int timestamp = lamportClock.getTimestamp();
-        logger.debug("Philosopher " + philosopherId + " is requesting forks with timestamp " + timestamp);
-        logger.info("Philosopher " + philosopherId + " is requesting forks.");
-        // Request forks from neighbors
-        logger.info("Philosopher " + philosopherId + " is requesting left fork.");
-        sendRequest(leftNeighborSocket, Direction.RIGHT, timestamp);
-        logger.info("Philosopher " + philosopherId + " is requesting right fork.");
-        sendRequest(rightNeighborSocket, Direction.LEFT, timestamp);
-        // Print messages
-        boolean printedLeftForkMessage = false;
-        boolean printedRightForkMessage = false;
-        // Wait until both forks are acquired
-        while (!(hasLeftFork && hasRightFork)) {
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                logger.error("An error occurred while waiting for forks", e);
-            }
-            if (hasLeftFork && !printedLeftForkMessage) {
-                logger.info("Philosopher " + philosopherId + " has left fork.");
-                printedLeftForkMessage = true;
-            }
+        System.out.println(hasReply);
+        // Roucairol-Carvalho optimization
+        // Check if the philosopher has received a reply from both neighbors
+        // Once site P i P_{i} has received a reply message from site Pj, site Pi may enter
+        // the critical section multiple times without receiving permission from Pj on
+        // subsequent attempts up to the moment when Pi has sent a reply message to Pj.
+        if(hasReply) {
+            // Requesting forks
+            setRequesting(true);
+            // Get the current Lamport timestamp
+            int timestamp = lamportClock.getTimestamp();
+            logger.debug("Philosopher " + philosopherId + " is requesting forks with timestamp " + timestamp);
+            logger.info("Philosopher " + philosopherId + " is requesting forks.");
+            // Request forks from neighbors
+            logger.info("Philosopher " + philosopherId + " is requesting left fork.");
+            sendRequest(leftNeighborSocket, Direction.RIGHT, timestamp);
+            logger.info("Philosopher " + philosopherId + " is requesting right fork.");
+            sendRequest(rightNeighborSocket, Direction.LEFT, timestamp);
+            // Print messages
+            boolean printedLeftForkMessage = false;
+            boolean printedRightForkMessage = false;
+            // Wait until both forks are acquired
+            while (!(hasLeftFork && hasRightFork)) {
+                try {
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    logger.error("An error occurred while waiting for forks", e);
+                }
+                if (hasLeftFork && !printedLeftForkMessage) {
+                    logger.info("Philosopher " + philosopherId + " has left fork.");
+                    printedLeftForkMessage = true;
+                }
 
-            if (hasRightFork && !printedRightForkMessage) {
-                logger.info("Philosopher " + philosopherId + " has right fork.");
-                printedRightForkMessage = true;
+                if (hasRightFork && !printedRightForkMessage) {
+                    logger.info("Philosopher " + philosopherId + " has right fork.");
+                    printedRightForkMessage = true;
+                }
             }
+            setHasReply(false);
         }
         // Enter critical section
         setInCriticalSection(true);
@@ -209,10 +220,9 @@ class Philosopher {
         new Thread(() -> {
             while (true) {
                 try {
-                    sendSPing(leftNeighborSocket, Direction.RIGHT);
-                    sendSPing(rightNeighborSocket, Direction.LEFT);
+                    sendPing(leftNeighborSocket, Direction.RIGHT);
+                    sendPing(rightNeighborSocket, Direction.LEFT);
                     Thread.sleep(PING_INTERVAL);
-                    System.out.println("ff");
                     if (!(isReceivedPingLeft() && isReceivedPingRight())) {
                         logger.error("Philosopher " + philosopherId + " has not received a ping back from his neighbors");
                         logger.error("Philosopher " + philosopherId + " left the table");
@@ -249,45 +259,12 @@ class Philosopher {
     }
 
     /**
-     * Receive a request from a neighbor
-     *
-     * @param requestingSocket The socket of the requesting neighbor
-     * @param receivedMessage  The message received from the neighbor
-     */
-    public synchronized void receiveRequest(Socket requestingSocket, Message receivedMessage) {
-        // Get current timestamp
-        int timestamp = lamportClock.getTimestamp();
-        // On receiving a request, update the local Lamport timestamp
-        lamportClock.synchronize(receivedMessage.getTimestamp());
-        int requestTimestamp = receivedMessage.getTimestamp();
-        Direction requestDirection = receivedMessage.getDirection();
-        int requestPhilosopherId = receivedMessage.getPhilosopherId();
-
-        // Site Sj is neither requesting nor currently executing the critical section send REPLY
-        // In case Site Sj is requesting, the timestamp of Site Si's request is smaller than its own request send REPLY
-        // In Case requestTimestamp == timestamp, Sj sends Si a REPLY
-        // ELSE defer the request
-        if ((!inCriticalSection() && !isRequesting()) || (isRequesting() && (requestTimestamp < timestamp)) || (requestTimestamp == timestamp && requestPhilosopherId < philosopherId)) {
-            logger.debug("Philosopher " + philosopherId + " received REQUEST from Philosopher " + requestPhilosopherId + " " + requestDirection + " with timestamp " + requestTimestamp);
-            if (requestDirection == Direction.LEFT) {
-                sendReply(leftNeighborSocket, reverseDirection(requestDirection));
-            } else {
-                sendReply(rightNeighborSocket, reverseDirection(requestDirection));
-            }
-        } else {
-            // Defer the request
-            logger.debug("Philosopher " + philosopherId + " deferred REQUEST from Philosopher " + receivedMessage.getPhilosopherId() + " " + receivedMessage.getDirection());
-            deferredRequests.add(new DeferredRequest(requestingSocket, requestTimestamp, requestDirection));
-        }
-    }
-
-    /**
      * Send a reply to a neighbor
      *
      * @param receivingSocket The socket of the receiving neighbor
      * @param direction       The direction of the reply
      */
-    private synchronized void sendReply(Socket receivingSocket, Direction direction) {
+    public synchronized void sendReply(Socket receivingSocket, Direction direction) {
         ObjectOutputStream out;
         try {
             out = new ObjectOutputStream(receivingSocket.getOutputStream());
@@ -301,22 +278,6 @@ class Philosopher {
     }
 
     /**
-     * Receive a reply from a neighbor
-     *
-     * @param clientId  The ID of the neighbor
-     * @param direction The direction of the reply
-     */
-    public synchronized void receiveReply(int clientId, Direction direction) {
-        if (direction == Direction.LEFT) {
-            logger.debug("Philosopher " + philosopherId + " received REPLY from Philosopher " + clientId + " " + direction);
-            hasLeftFork = true;
-        } else {
-            logger.debug("Philosopher " + philosopherId + " received REPLY from Philosopher " + clientId + " " + direction);
-            hasRightFork = true;
-        }
-    }
-
-    /**
      * Send a counter to a neighbor
      *
      * @param receivingSocket The socket of the receiving neighbor
@@ -325,10 +286,6 @@ class Philosopher {
     private synchronized void sendCounter(Socket receivingSocket, Direction direction, GCounter gCounter) {
         ObjectOutputStream out;
         try {
-            //possible workaround for java.io.StreamCorruptedException: invalid type code: AC
-            //send multiple messages concurrently causes the stream to be corrupted
-            //locks the object so only one thread
-            //SEE: sendReply(), sendRequest()
             out = new ObjectOutputStream(receivingSocket.getOutputStream());
             Message counterMessage = new Message(MessageType.COUNTER, this.philosopherId, direction, gCounter);
             out.writeObject(counterMessage);
@@ -359,28 +316,16 @@ class Philosopher {
     }
 
     /**
-     * Receive a counter from a neighbor
-     *
-     * @param clientId  The ID of the neighbor
-     * @param direction The direction of the counter
-     * @param gCounter  The counter object of the philosopher
-     */
-    public synchronized void receiveCounter(int clientId, Direction direction, GCounter gCounter) {
-        logger.debug("Philosopher " + philosopherId + " received COUNTER from Philosopher " + clientId + " " + direction);
-        localCounter.merge(gCounter);
-    }
-
-    /**
      * Send a ping to a neighbor
      *
      * @param receivingSocket The socket of the receiving neighbor
      * @param direction       The direction of the ping
      */
-    public synchronized void sendSPing(Socket receivingSocket, Direction direction) {
+    public synchronized void sendPing(Socket receivingSocket, Direction direction) {
         ObjectOutputStream out;
         try {
             out = new ObjectOutputStream(receivingSocket.getOutputStream());
-            Message replyMessage = new Message(MessageType.S_PING, this.philosopherId, direction);
+            Message replyMessage = new Message(MessageType.PING_SENT, this.philosopherId, direction);
             out.writeObject(replyMessage);
             //out.flush(); hotfix for java.net.SocketException: Connection reset
             logger.debug("Philosopher " + philosopherId + " sent S_PING to Philosopher " + reverseDirection(direction));
@@ -396,49 +341,17 @@ class Philosopher {
      * @param receivingSocket The socket of the receiving neighbor
      * @param direction       The direction of the ping
      */
-    public synchronized void sendRPing(Socket receivingSocket, Direction direction) {
+    public synchronized void sendPingAnswer(Socket receivingSocket, Direction direction) {
         ObjectOutputStream out;
         try {
             out = new ObjectOutputStream(receivingSocket.getOutputStream());
-            Message replyMessage = new Message(MessageType.R_PING, this.philosopherId, direction);
+            Message replyMessage = new Message(MessageType.PING_RECEIVED, this.philosopherId, direction);
             out.writeObject(replyMessage);
             //out.flush(); hotfix for java.net.SocketException: Connection reset
             logger.debug("Philosopher " + philosopherId + " sent R_PING to Philosopher " + reverseDirection(direction));
 
         } catch (IOException e) {
             logger.error("An error occurred while sending a ping", e);
-        }
-    }
-
-    /**
-     * Receive a ping from a neighbor
-     *
-     * @param clientId  The ID of the neighbor
-     * @param direction The direction of the ping
-     */
-    public synchronized void receiveSPing(int clientId, Direction direction) {
-        if (direction == Direction.LEFT) {
-            sendRPing(leftNeighborSocket, reverseDirection(direction));
-            logger.debug("Philosopher " + philosopherId + " received PING from Philosopher " + clientId + " " + direction);
-        } else {
-            sendRPing(rightNeighborSocket, reverseDirection(direction));
-            logger.debug("Philosopher " + philosopherId + " received PING from Philosopher " + clientId + " " + direction);
-        }
-    }
-
-    /**
-     * Receive a ping back from a neighbor
-     *
-     * @param clientId  The ID of the neighbor
-     * @param direction The direction of the ping
-     */
-    public synchronized void receiveRPing(int clientId, Direction direction) {
-        if (direction == Direction.LEFT) {
-            setReceivedPingRight(true);
-            logger.debug("Philosopher " + philosopherId + " received PING from Philosopher " + clientId + " " + direction);
-        } else {
-            setReceivedPingLeft(true);
-            logger.debug("Philosopher " + philosopherId + " received PING from Philosopher " + clientId + " " + direction);
         }
     }
 
@@ -526,5 +439,45 @@ class Philosopher {
 
     public synchronized void setReceivedPingRight(boolean receivedPingRight) {
         this.receivedPingRight = receivedPingRight;
+    }
+
+    public LamportClock getLamportClock() {
+        return lamportClock;
+    }
+
+    public int getPhilosopherId() {
+        return philosopherId;
+    }
+
+    public Socket getLeftNeighborSocket() {
+        return leftNeighborSocket;
+    }
+
+    public Socket getRightNeighborSocket() {
+        return rightNeighborSocket;
+    }
+
+    public BlockingQueue<DeferredRequest> getDeferredRequests() {
+        return deferredRequests;
+    }
+
+    public void setHasLeftFork(boolean hasLeftFork) {
+        this.hasLeftFork = hasLeftFork;
+    }
+
+    public void setHasRightFork(boolean hasRightFork) {
+        this.hasRightFork = hasRightFork;
+    }
+
+    public GCounter getLocalCounter() {
+        return localCounter;
+    }
+
+    public synchronized boolean isHasReply() {
+        return hasReply;
+    }
+
+    public synchronized void setHasReply(boolean hasReply) {
+        this.hasReply = hasReply;
     }
 }
