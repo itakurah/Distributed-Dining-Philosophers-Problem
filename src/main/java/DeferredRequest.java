@@ -3,7 +3,7 @@ import java.net.Socket;
 /**
  * A deferred request is a request that has been received but cannot be processed yet
  */
-class DeferredRequest {
+public class DeferredRequest {
     /**
      * The socket of the client that sent the request
      */
