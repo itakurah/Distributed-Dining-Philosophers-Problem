@@ -4,7 +4,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Lamport logical clock implementation
  */
-class LamportClock implements Serializable {
+public class LamportClock implements Serializable {
     /**
      * The current Lamport timestamp
      */

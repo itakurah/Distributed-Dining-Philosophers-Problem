@@ -3,7 +3,7 @@ import java.io.Serializable;
 /**
  * A message that is sent between philosophers
  */
-class Message implements Serializable {
+public class Message implements Serializable {
     /**
      * The type of the message
      */

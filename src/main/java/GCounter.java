@@ -5,7 +5,7 @@ import java.util.Map;
 /**
  * A G-Counter is a grow-only counter that can only be incremented
  */
-class GCounter implements Serializable {
+public class GCounter implements Serializable {
     /**
      * The id of the philosopher that the counter belongs to
      */

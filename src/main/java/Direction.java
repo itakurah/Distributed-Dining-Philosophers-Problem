@@ -1,7 +1,7 @@
 /**
  * Enum for the direction of the message
  */
-enum Direction {
+public enum Direction {
     LEFT,
     RIGHT
 }
