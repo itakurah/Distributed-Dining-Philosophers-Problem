@@ -129,13 +129,12 @@ public class Philosopher {
     public void requestForks() {
         // On request, update the Lamport timestamp
         lamportClock.update();
-        System.out.println(hasReply);
         // Roucairol-Carvalho optimization
         // Check if the philosopher has received a reply from both neighbors
         // Once site P i P_{i} has received a reply message from site Pj, site Pi may enter
         // the critical section multiple times without receiving permission from Pj on
         // subsequent attempts up to the moment when Pi has sent a reply message to Pj.
-        if(hasReply) {
+        if (hasReply) {
             // Requesting forks
             setRequesting(true);
             // Get the current Lamport timestamp
