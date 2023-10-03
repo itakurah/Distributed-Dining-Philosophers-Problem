@@ -36,7 +36,7 @@ public class Philosopher {
      * The first element is the maximum time in milliseconds
      * The second element is the minimum time in milliseconds
      */
-    private final int[] thinkInterval = new int[]{100000, 5000};
+    private final int[] thinkInterval = new int[]{30000, 5000};
     /**
      * The Lamport clock of the philosopher
      */
