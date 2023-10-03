@@ -1,13 +1,36 @@
 
 # Distributed Dining Philosophers Problem
-This repository contains an implementation for solving the classic Dining Philosophers problem in a peer-to-peer (P2P) environment, using the Ricart-Agrawala Algorithm for mutual exclusion with the Roucairol-Carvalho optimization along with Lamport's Logical Clocks.
+This repository contains an implementation for solving the classic Dining philosophers problem in a peer-to-peer (P2P) environment, using the Ricart-Agrawala Algorithm for mutual exclusion with the Roucairol-Carvalho optimization along with Lamport's Logical Clocks.
 
 ## Overview
-<img src="https://raw.githubusercontent.com/itakurah/Distributed-Dining-Philosophers-Problem/main/images/table.jpg" width=50% height=50%>
+The Ricart-Agrawala algorithm with Lamport clocks is a distributed mutual exclusion algorithm used in a distributed computing environment to coordinate access to shared resources, such as forks in the context of the dining philosophers problem. This algorithm ensures that multiple philosophers can safely access a shared resource without causing conflicts or data corruption.
+
+In this implementation, the algorithm can be executed either locally on different machines connected via a network or within a provided Docker environment, allowing for distributed execution. Each philosopher in the system follows a set of rules:
+1.  **Initial Thinking**: Every philosopher starts by thinking for some time, simulating their idle state.
+
+2.  **Requesting Forks**: When a philosopher decides to eat, they request the left and right forks from their neighboring philosophers. In a distributed setting, this involves sending a request message to their neighbors.
+
+3.  **Waiting for Responses**: The philosopher cannot start eating until both their left and right neighbors have responded to their fork request. This means that the philosopher must receive acknowledgment messages from both neighbors before proceeding to eat.
+
+4. **Eating**: Once the philosopher has received acknowledgment messages from both neighbors, they can start eating. The philosopher will eat for some time, simulating their critical section.
+
+5. **Roucairol-Carvalho Optimization**: This optimization allows a philosopher to eat again if neither their left nor right neighbor has requested a fork within the interval of two eating periods. This helps to avoid unnecessary waiting and contention for forks.
+
+6. **Handling Concurrent Requests**: If a neighbor sends a request while the current philosopher is in the critical section the request gets deferred. When a philosopher is also in the requesting process, several conditions are checked:
+    - The request is deferred if the timestamp of the receiving philosopher's request is smaller. This ensures that the philosopher with the lower timestamp gets priority.
+    - If the timestamps of the requesting philosopher and the receiving philosopher are equal, the request is also deferred if the receiving philosopher has a lower ID. This further prioritizes requests based on the philosopher's ID.
+
+   Additionally, if a philosopher receives a request while not in the critical section and not currently requesting forks, they immediately send back a reply in response to the received request.
+
+
+7. **Releasing Forks**: Once the philosopher has finished eating, they release their forks and send acknowledgment messages to their neighbors. In a distributed setting, this involves sending a release message to their neighbors.  
+   <img src="https://raw.githubusercontent.com/itakurah/Distributed-Dining-Philosophers-Problem/main/images/table.jpg" width=80% height=80%>
 
 Sources:
 - *https://www.flaticon.com/free-icon/philosophy_2178189*
 - *https://www.freepik.com/icon/fork-diagonal_45433*
+-
+## Usage
 
 
 ## [Ricart-Agrawala Algorithm](https://en.wikipedia.org/wiki/Ricart%E2%80%93Agrawala_algorithm "Ricart-Agrawala Algorithm")
