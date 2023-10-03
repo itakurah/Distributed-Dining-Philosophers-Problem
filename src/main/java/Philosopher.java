@@ -79,6 +79,9 @@ public class Philosopher {
     private boolean receivedPingLeft = false;
     private boolean receivedPingRight = false;
 
+    /**
+     * The state of the reply
+     */
     private boolean hasReply = true;
 
     /**
