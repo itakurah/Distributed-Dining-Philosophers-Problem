@@ -1,10 +1,21 @@
 /**
  * Enum for message types
  */
-enum MessageType {
+public enum MessageType {
+    /**
+     * A request message
+     */
     REQUEST,
+    /**
+     * A reply message
+     */
     REPLY,
+    /**
+     * A counter message
+     */
     COUNTER,
-    PING_SENT,
-    PING_RECEIVED
+    /**
+     * A ping message
+     */
+    PING
 }
