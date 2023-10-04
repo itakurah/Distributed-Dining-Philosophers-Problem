@@ -1,7 +1,7 @@
 
 # Distributed Dining Philosophers Problem
 This repository contains an implementation for solving the classic Dining philosophers problem in a peer-to-peer (P2P) environment, using the Ricart-Agrawala Algorithm for mutual exclusion with the Roucairol-Carvalho optimization along with Lamport's Logical Clocks.
-   <div><center><img src="https://raw.githubusercontent.com/itakurah/Distributed-Dining-Philosophers-Problem/main/images/table.jpg" width=50% height=50%></center></div>
+   <div><center><img src="https://raw.githubusercontent.com/itakurah/Distributed-Dining-Philosophers-Problem/main/images/table.jpg" width=50% height=50%></center></div>  
 
 Sources:
 - *https://www.flaticon.com/free-icon/philosophy_2178189*
@@ -32,34 +32,35 @@ In this implementation, the philosophers can be executed either locally on diffe
 ## Usage
 ### Local Network Setup
 1. Build the project using Maven:
-```sh
-   mvn clean install
-   ```
-2. Locate the `ddpp-1.0.jar` file inside the `taget` folder.
-3. Start the simulation:
- ```sh
-   java -cp ddpp-1.0.jar Application <PhilosopherID>1 <LocalServerPort> <LeftNeighborHostAddress> <LeftNeighborPort> <RightNeighborHostAddress> <RightNeighborPort>
-   ```
-### Docker Setup
-1. In the same folder as the Dockerfile run:
-   ```sh
-   docker build -t ddpp:latest 
-   ```
-2. Generate the docker-compose file using:
-   ```sh
-   java src\main\java\GenerateCompose.java <NumberOfDockerContainers> <InitialServerPort>    
-   ```
-Note: The initial server port is used to incrementally set the ports for the other containers.
-3.  Start the Docker containers using:
-   ```sh
-   docker-compose -f docker-compose.yml up -d --remove-orphans
-  ```
-4. To stop the simulation run this command:
-   ```sh
-   docker-compose -f docker-compose.yml down
-  ```
+```sh  
+ mvn clean install  
+ ```
+2. Locate the `ddpp-1.0.jar` file inside the `taget` folder.  
+3. Start the simulation:  
+ ```sh  
+ java -cp ddpp-1.0.jar Application <PhilosopherID>1 <LocalServerPort> <LeftNeighborHostAddress> <LeftNeighborPort> <RightNeighborHostAddress> <RightNeighborPort>  
+ ```
+### Docker Setup  
+1. In the same folder as the Dockerfile run:  
+```sh  
+  docker build -t ddpp:latest
+```  
 
-# Sources
+2. Generate the docker-compose file using:  
+```sh  
+  java src\main\java\GenerateCompose.java <NumberOfDockerContainers> <InitialServerPort>      
+  ```
+Note: The initial server port is used to incrementally set the ports for the other containers.
+3. Start the Docker containers using:
+ ```sh  
+ docker-compose -f docker-compose.yml up -d --remove-orphans  
+ ```
+4. To stop the simulation run this command:
+```sh  
+  docker-compose -f docker-compose.yml down  
+ ```  
+
+## Sources
 - https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type
 - https://en.wikipedia.org/wiki/Ricart%E2%80%93Agrawala_algorithm
 - https://en.wikipedia.org/wiki/Lamport_timestamp
