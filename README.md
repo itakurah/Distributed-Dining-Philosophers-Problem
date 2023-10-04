@@ -54,7 +54,7 @@ In this implementation, the philosophers can be executed either locally on diffe
 Note: The initial server port is used to incrementally set the ports for the other containers.
 3. Start the Docker containers using:
  ```sh  
- docker-compose -f docker-compose.yml up -d --remove-orphans  
+  docker-compose -f docker-compose.yml up -d --remove-orphans  
  ```
 4. To stop the simulation run this command:
 ```sh  
