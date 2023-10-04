@@ -30,13 +30,13 @@ public class Philosopher {
      * The first element is the maximum time in milliseconds
      * The second element is the minimum time in milliseconds
      */
-    private final int[] eatInterval = new int[]{10000, 5000};
+    private final int[] eatInterval = new int[]{100, 50};
     /**
      * The interval for thinking
      * The first element is the maximum time in milliseconds
      * The second element is the minimum time in milliseconds
      */
-    private final int[] thinkInterval = new int[]{30000, 5000};
+    private final int[] thinkInterval = new int[]{300, 50};
     /**
      * The Lamport clock of the philosopher
      */
@@ -143,6 +143,7 @@ public class Philosopher {
         // the critical section multiple times without receiving permission from Pj on
         // subsequent attempts up to the moment when Pi has sent a reply message to Pj.
         if (isHasReply()) {
+            setHasReply(false);
             // Requesting forks
             setRequesting(true);
             // Get the current Lamport timestamp
@@ -174,7 +175,6 @@ public class Philosopher {
                     printedRightForkMessage = true;
                 }
             }
-            setHasReply(false);
         }
         // Enter critical section
         setInCriticalSection(true);
