@@ -13,6 +13,10 @@ public class Message implements Serializable {
      */
     private final int philosopherId;
     /**
+     * The id of the remote philosopher
+     */
+    private int remotePhilosopherId;
+    /**
      * The direction of the message
      */
     private final Direction direction;
@@ -26,7 +30,7 @@ public class Message implements Serializable {
     private GCounter gCounter;
 
     /**
-     * Create a new message
+     * Create a new request message
      *
      * @param type          The type of the message
      * @param philosopherId The id of the philosopher that sent the message
@@ -41,7 +45,7 @@ public class Message implements Serializable {
     }
 
     /**
-     * Create a new message
+     * Create a new reply message
      *
      * @param type          The type of the message
      * @param philosopherId The id of the philosopher that sent the message
@@ -54,7 +58,21 @@ public class Message implements Serializable {
     }
 
     /**
-     * Create a new message
+     * Create a new reply or ping message
+     *
+     * @param type          The type of the message
+     * @param philosopherId The id of the philosopher that sent the message
+     * @param direction     The direction of the message
+     */
+    public Message(MessageType type, int philosopherId, int remotePhilosopherId, Direction direction) {
+        this.type = type;
+        this.philosopherId = philosopherId;
+        this.direction = direction;
+        this.remotePhilosopherId = remotePhilosopherId;
+    }
+
+    /**
+     * Create a new counter message
      *
      * @param type          The type of the message
      * @param philosopherId The id of the philosopher that sent the message
@@ -111,5 +129,14 @@ public class Message implements Serializable {
      */
     public GCounter getGCounter() {
         return gCounter;
+    }
+
+    /**
+     * Get the id of the remote philosopher
+     *
+     * @return The id of the remote philosopher
+     */
+    public int getRemotePhilosopherId() {
+        return remotePhilosopherId;
     }
 }
