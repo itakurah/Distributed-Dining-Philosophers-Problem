@@ -36,15 +36,18 @@ public class Server {
      * @param port        The port that the server listens on
      */
     public Server(Philosopher philosopher, int port) {
+        if (philosopher == null) throw new IllegalArgumentException("Philosopher cannot be null");
+        if (port <= 0 ) throw new IllegalArgumentException("Port cannot be negative or zero");
         this.philosopher = philosopher;
         this.PORT = port;
         this.serverLatch = new CountDownLatch(1); // Initialize the latch
+        startListener();
     }
 
     /**
      * Start the server listener
      */
-    public void startListener() {
+    private void startListener() {
         new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(PORT)) {
                 logger.debug("Server started on port " + PORT);
@@ -78,7 +81,7 @@ public class Server {
      * @param clientSocket The socket of the client
      * @param philosopher  The philosopher that the client handler belongs to
      */
-    public void messageHandler(Socket clientSocket, Philosopher philosopher) {
+    private void messageHandler(Socket clientSocket, Philosopher philosopher) {
         new Thread(() -> {
             try {
                 ObjectInputStream in;
@@ -95,10 +98,8 @@ public class Server {
                             receiveReply(receivedMessage.getPhilosopherId(), receivedMessage.getDirection());
                         } else if (receivedMessage.getType() == MessageType.COUNTER) {
                             receiveCounter(receivedMessage.getPhilosopherId(), receivedMessage.getDirection(), receivedMessage.getGCounter());
-                        } else if (receivedMessage.getType() == MessageType.PING_SENT) {
-                            receivePing(receivedMessage.getPhilosopherId(), receivedMessage.getDirection());
-                        } else if (receivedMessage.getType() == MessageType.PING_RECEIVED) {
-                            receiveRequestedPing(receivedMessage.getPhilosopherId(), receivedMessage.getDirection());
+                        } else if (receivedMessage.getType() == MessageType.PING) {
+                            receivePing(receivedMessage.getPhilosopherId(), receivedMessage.getRemotePhilosopherId(), receivedMessage.getDirection());
                         }
                     } catch (EOFException e) {
                         logger.error("Error while handling client request", e);
@@ -123,7 +124,7 @@ public class Server {
      * @param requestingSocket The socket of the requesting neighbor
      * @param receivedMessage  The message received from the neighbor
      */
-    public synchronized void receiveRequest(Socket requestingSocket, Message receivedMessage) {
+    private synchronized void receiveRequest(Socket requestingSocket, Message receivedMessage) {
         philosopher.setHasReply(true);
         // Get current timestamp
         int timestamp = philosopher.getLamportClock().getTimestamp();
@@ -147,7 +148,7 @@ public class Server {
         } else {
             // Defer the request
             logger.debug("Philosopher " + philosopher.getPhilosopherId() + " deferred REQUEST from Philosopher " + receivedMessage.getPhilosopherId() + " " + receivedMessage.getDirection());
-            philosopher.getDeferredRequests().add(new DeferredRequest(requestingSocket, requestTimestamp, requestDirection));
+            philosopher.getDeferredRequests().add(new DeferredRequest(requestingSocket, requestDirection));
         }
     }
 
@@ -157,7 +158,7 @@ public class Server {
      * @param clientId  The ID of the neighbor
      * @param direction The direction of the reply
      */
-    public synchronized void receiveReply(int clientId, Direction direction) {
+    private synchronized void receiveReply(int clientId, Direction direction) {
         if (direction == Direction.LEFT) {
             logger.debug("Philosopher " + philosopher.getPhilosopherId() + " received REPLY from Philosopher " + clientId + " " + direction);
             philosopher.setHasLeftFork(true);
@@ -174,7 +175,7 @@ public class Server {
      * @param direction The direction of the counter
      * @param gCounter  The counter object of the philosopher
      */
-    public synchronized void receiveCounter(int clientId, Direction direction, GCounter gCounter) {
+    private synchronized void receiveCounter(int clientId, Direction direction, GCounter gCounter) {
         logger.debug("Philosopher " + philosopher.getPhilosopherId() + " received COUNTER from Philosopher " + clientId + " " + direction);
         philosopher.getLocalCounter().merge(gCounter);
     }
@@ -185,29 +186,16 @@ public class Server {
      * @param clientId  The ID of the neighbor
      * @param direction The direction of the ping
      */
-    public synchronized void receivePing(int clientId, Direction direction) {
-        if (direction == Direction.LEFT) {
-            philosopher.sendPingAnswer(philosopher.getLeftNeighborSocket(), philosopher.reverseDirection(direction));
-            logger.debug("Philosopher " + philosopher.getPhilosopherId() + " received PING from Philosopher " + clientId + " " + direction);
-        } else {
-            philosopher.sendPingAnswer(philosopher.getRightNeighborSocket(), philosopher.reverseDirection(direction));
-            logger.debug("Philosopher " + philosopher.getPhilosopherId() + " received PING from Philosopher " + clientId + " " + direction);
-        }
-    }
-
-    /**
-     * Receive a ping back from a neighbor
-     *
-     * @param clientId  The ID of the neighbor
-     * @param direction The direction of the ping
-     */
-    public synchronized void receiveRequestedPing(int clientId, Direction direction) {
-        if (direction == Direction.LEFT) {
+    private synchronized void receivePing(int clientId, int remotePhilosopherId, Direction direction) {
+        logger.debug("Philosopher " + philosopher.getPhilosopherId() + " received PING from Philosopher " + clientId + " " + direction);
+        if (direction == Direction.LEFT && remotePhilosopherId == -1) {
+            philosopher.sendPing(philosopher.getLeftNeighborSocket(), clientId, philosopher.reverseDirection(direction));
+        } else if (direction == Direction.RIGHT && remotePhilosopherId == -1) {
+            philosopher.sendPing(philosopher.getRightNeighborSocket(), clientId, philosopher.reverseDirection(direction));
+        } else if (direction == Direction.LEFT && philosopher.getPhilosopherId() == remotePhilosopherId) {
             philosopher.setReceivedPingRight(true);
-            logger.debug("Philosopher " + philosopher.getPhilosopherId() + " received PING from Philosopher " + clientId + " " + direction);
-        } else {
+        } else if (direction == Direction.RIGHT && philosopher.getPhilosopherId() == remotePhilosopherId) {
             philosopher.setReceivedPingLeft(true);
-            logger.debug("Philosopher " + philosopher.getPhilosopherId() + " received PING from Philosopher " + clientId + " " + direction);
         }
     }
 
