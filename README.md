@@ -39,7 +39,7 @@ In this implementation, the philosophers can be executed either locally on diffe
 2. Locate the `ddpp-1.0.jar` file inside the `taget` folder.  
 3. Start the simulation:  
  ```sh  
- java -cp ddpp-1.0.jar Application <PhilosopherID> <LocalServerPort> <LeftNeighborHostAddress> <LeftNeighborPort> <RightNeighborHostAddress> <RightNeighborPort>  
+  java -cp ddpp-1.0.jar Application <PhilosopherID> <LocalServerPort> <LeftNeighborHostAddress> <LeftNeighborPort> <RightNeighborHostAddress> <RightNeighborPort>  
  ```
 ### Docker Setup  
 1. In the same folder as the Dockerfile run:  
