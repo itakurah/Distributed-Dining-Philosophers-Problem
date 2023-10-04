@@ -1,4 +1,3 @@
-
 # Distributed Dining Philosophers Problem
 This repository contains an implementation for solving the classic Dining philosophers problem in a peer-to-peer (P2P) environment, using the Ricart-Agrawala Algorithm for mutual exclusion with the Roucairol-Carvalho optimization along with Lamport's Logical Clocks and a G-Counter a Conflict-free replicated data type(CRDT) for counting the number of spaghetti meals eaten.
    <p align="center"> 
@@ -40,7 +39,7 @@ In this implementation, the philosophers can be executed either locally on diffe
 2. Locate the `ddpp-1.0.jar` file inside the `taget` folder.  
 3. Start the simulation:  
  ```sh  
- java -cp ddpp-1.0.jar Application <PhilosopherID>1 <LocalServerPort> <LeftNeighborHostAddress> <LeftNeighborPort> <RightNeighborHostAddress> <RightNeighborPort>  
+ java -cp ddpp-1.0.jar Application <PhilosopherID> <LocalServerPort> <LeftNeighborHostAddress> <LeftNeighborPort> <RightNeighborHostAddress> <RightNeighborPort>  
  ```
 ### Docker Setup  
 1. In the same folder as the Dockerfile run:  
