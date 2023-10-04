@@ -8,10 +8,6 @@ public class DeferredRequest {
      * The socket of the client that sent the request
      */
     private final Socket socket;
-    /**
-     * The timestamp of the request
-     */
-    private final int requestTimestamp;
 
     /**
      * The direction of the request
@@ -21,13 +17,11 @@ public class DeferredRequest {
     /**
      * Create a new deferred request
      *
-     * @param socket           The socket of the client that sent the request
-     * @param requestTimestamp The timestamp of the request
-     * @param direction        The direction of the request
+     * @param socket    The socket of the client that sent the request
+     * @param direction The direction of the request
      */
-    public DeferredRequest(Socket socket, int requestTimestamp, Direction direction) {
+    public DeferredRequest(Socket socket, Direction direction) {
         this.socket = socket;
-        this.requestTimestamp = requestTimestamp;
         this.direction = direction;
     }
 
@@ -38,15 +32,6 @@ public class DeferredRequest {
      */
     public Socket getSocket() {
         return socket;
-    }
-
-    /**
-     * Get the timestamp of the request
-     *
-     * @return The timestamp of the request
-     */
-    public int getRequestTimestamp() {
-        return requestTimestamp;
     }
 
     /**
@@ -62,7 +47,6 @@ public class DeferredRequest {
     public String toString() {
         return "DeferredRequest{" +
                 "socket=" + socket +
-                ", requestTimestamp=" + requestTimestamp +
                 ", direction='" + direction + '\'' +
                 '}';
     }
