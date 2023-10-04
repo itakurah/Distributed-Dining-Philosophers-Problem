@@ -4,6 +4,7 @@ This repository contains an implementation for solving the classic Dining philos
   <img src="images/table.jpg" alt="Table" width="50%">
 </div> 
 </p>
+
 Sources:
 - *https://www.flaticon.com/free-icon/philosophy_2178189*
 - *https://www.freepik.com/icon/fork-diagonal_45433*
