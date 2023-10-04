@@ -60,6 +60,10 @@ Note: The initial server port is used to incrementally set the ports for the oth
   docker-compose -f docker-compose.yml down  
  ```  
 
+# License
+This project is licensed under the MIT License. See the LICENSE file for details.
+
+
 ## Sources
 - https://en.wikipedia.org/wiki/Conflict-free_replicated_data_type
 - https://en.wikipedia.org/wiki/Ricart%E2%80%93Agrawala_algorithm
