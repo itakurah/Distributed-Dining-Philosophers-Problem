@@ -12,7 +12,7 @@ RUN mvn clean install
 
 # Use an official OpenJDK runtime as a base image
 FROM openjdk:21-jdk-slim
-ENV ARTIFACT_NAME=vs-1.0-SNAPSHOT.jar
+ENV ARTIFACT_NAME=ddpp-1.0.jar
 ENV APP_HOME=/usr/app/
 
 WORKDIR $APP_HOME

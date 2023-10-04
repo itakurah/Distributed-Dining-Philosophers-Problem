@@ -25,7 +25,7 @@ public class GenerateCompose {
                 }
                 writer.write("  app" + i + ":\n");
                 writer.write("    image: ddpp:latest\n");
-                writer.write("    command: ['java', '-jar', '/usr/app/vs-1.0-SNAPSHOT.jar', '" + i + "', '" + leftNeighborPort + "', '" + (isFirst ? "app" + numInstances : "app" + (i - 1)) + "', '" + (isFirst ? leftNeighborPort + Integer.parseInt(args[0]) - 1 : leftNeighborPort - 1) + "', '" + (isLast ? "app" + (numInstances - i + 1) : "app" + (i + 1)) + "', '" + (isLast ? serverPort + 1 : leftNeighborPort + 1) + "']\n");
+                writer.write("    command: ['java', '-jar', '/usr/app/ddpp-1.0.jar', '" + i + "', '" + leftNeighborPort + "', '" + (isFirst ? "app" + numInstances : "app" + (i - 1)) + "', '" + (isFirst ? leftNeighborPort + Integer.parseInt(args[0]) - 1 : leftNeighborPort - 1) + "', '" + (isLast ? "app" + (numInstances - i + 1) : "app" + (i + 1)) + "', '" + (isLast ? serverPort + 1 : leftNeighborPort + 1) + "']\n");
                 writer.write("    networks:\n");
                 writer.write("      - network\n");
                 isFirst = false;
