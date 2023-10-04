@@ -37,7 +37,7 @@ public class Server {
      */
     public Server(Philosopher philosopher, int port) {
         if (philosopher == null) throw new IllegalArgumentException("Philosopher cannot be null");
-        if (port <= 0 ) throw new IllegalArgumentException("Port cannot be negative or zero");
+        if (port <= 0) throw new IllegalArgumentException("Port cannot be negative or zero");
         this.philosopher = philosopher;
         this.PORT = port;
         this.serverLatch = new CountDownLatch(1); // Initialize the latch
@@ -62,7 +62,7 @@ public class Server {
                         connectedClients++;
                         logger.debug("Client connected (" + connectedClients + " total): " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
                         // Create new thread for message handling per socket
-                        messageHandler(socket, philosopher);
+                        messageHandler(socket);
                     } catch (IOException e) {
                         logger.error("Error accepting client connection", e);
                     }
@@ -79,9 +79,8 @@ public class Server {
      * Handle messages from the client
      *
      * @param clientSocket The socket of the client
-     * @param philosopher  The philosopher that the client handler belongs to
      */
-    private void messageHandler(Socket clientSocket, Philosopher philosopher) {
+    private void messageHandler(Socket clientSocket) {
         new Thread(() -> {
             try {
                 ObjectInputStream in;
