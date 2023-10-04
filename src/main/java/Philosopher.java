@@ -48,7 +48,7 @@ public class Philosopher {
     /**
      * The interval between updates sent to neighbors in milliseconds
      */
-    private final int UPDATE_INTERVAL = 1000;
+    private final int UPDATE_INTERVAL = 100;
     private final int PING_INTERVAL = 5000;
     /**
      * The ID of the philosopher
@@ -89,12 +89,20 @@ public class Philosopher {
      *
      * @param philosopherId The ID of the philosopher
      */
-    public Philosopher(int philosopherId) {
+    public Philosopher(int philosopherId, InetSocketAddress leftNeighborAddress, InetSocketAddress rightNeighborAddress) {
+        if (philosopherId <= 0) throw new IllegalArgumentException("Philosopher ID must be greater than 0");
+        if (leftNeighborAddress == null) throw new IllegalArgumentException("Left neighbor address cannot be null");
+        if (rightNeighborAddress == null) throw new IllegalArgumentException("Right neighbor address cannot be null");
         this.philosopherId = philosopherId;
         this.hasLeftFork = false;
         this.hasRightFork = false;
         this.inCriticalSection = false;
         this.isRequesting = false;
+        // Connect to left and right neighbors
+        logger.debug("Connecting to neighbors");
+        connectToNeighbor(leftNeighborAddress, Direction.LEFT);
+        connectToNeighbor(rightNeighborAddress, Direction.RIGHT);
+        logger.debug("Connected to neighbors");
     }
 
     /**
@@ -134,7 +142,7 @@ public class Philosopher {
         // Once site Pi has received a reply message from site Pj, site Pi may enter
         // the critical section multiple times without receiving permission from Pj on
         // subsequent attempts up to the moment when Pi has sent a reply message to Pj.
-        if (hasReply) {
+        if (isHasReply()) {
             // Requesting forks
             setRequesting(true);
             // Get the current Lamport timestamp
@@ -222,8 +230,8 @@ public class Philosopher {
         new Thread(() -> {
             while (true) {
                 try {
-                    sendPing(leftNeighborSocket, Direction.RIGHT);
-                    sendPing(rightNeighborSocket, Direction.LEFT);
+                    sendPing(leftNeighborSocket, -1, Direction.RIGHT);
+                    sendPing(rightNeighborSocket, -1, Direction.LEFT);
                     Thread.sleep(PING_INTERVAL);
                     if (!(isReceivedPingLeft() && isReceivedPingRight())) {
                         logger.error("Philosopher " + philosopherId + " has not received a ping back from his neighbors");
@@ -323,73 +331,57 @@ public class Philosopher {
      * @param receivingSocket The socket of the receiving neighbor
      * @param direction       The direction of the ping
      */
-    public synchronized void sendPing(Socket receivingSocket, Direction direction) {
+    public synchronized void sendPing(Socket receivingSocket, int remotePhilosopherId, Direction direction) {
         ObjectOutputStream out;
         try {
             out = new ObjectOutputStream(receivingSocket.getOutputStream());
-            Message replyMessage = new Message(MessageType.PING_SENT, this.philosopherId, direction);
+            Message replyMessage = new Message(MessageType.PING, this.philosopherId, remotePhilosopherId, direction);
             out.writeObject(replyMessage);
             //out.flush(); hotfix for java.net.SocketException: Connection reset
-            logger.debug("Philosopher " + philosopherId + " sent S_PING to Philosopher " + reverseDirection(direction));
+            logger.debug("Philosopher " + philosopherId + " sent PING to Philosopher " + reverseDirection(direction));
 
         } catch (IOException e) {
             logger.error("An error occurred while sending a ping", e);
         }
     }
 
-    /**
-     * Send a ping back to a neighbor
-     *
-     * @param receivingSocket The socket of the receiving neighbor
-     * @param direction       The direction of the ping
-     */
-    public synchronized void sendPingAnswer(Socket receivingSocket, Direction direction) {
-        ObjectOutputStream out;
-        try {
-            out = new ObjectOutputStream(receivingSocket.getOutputStream());
-            Message replyMessage = new Message(MessageType.PING_RECEIVED, this.philosopherId, direction);
-            out.writeObject(replyMessage);
-            //out.flush(); hotfix for java.net.SocketException: Connection reset
-            logger.debug("Philosopher " + philosopherId + " sent R_PING to Philosopher " + reverseDirection(direction));
-
-        } catch (IOException e) {
-            logger.error("An error occurred while sending a ping", e);
-        }
-    }
 
     /**
      * Connect to a neighbor
      *
      * @param neighborAddress The address of a neighbor
      */
-    public void connectToNeighbor(InetSocketAddress neighborAddress, Direction direction) {
-        for (int retryCount = 1; retryCount <= NUM_OF_RETRIES; retryCount++) {
-            try {
-                if (direction == Direction.LEFT) {
-                    leftNeighborSocket = new Socket(neighborAddress.getAddress(), neighborAddress.getPort());
-                    logger.debug("Connected to neighbor: " + leftNeighborSocket);
-                } else {
-                    rightNeighborSocket = new Socket(neighborAddress.getAddress(), neighborAddress.getPort());
-                    logger.debug("Connected to neighbor: " + rightNeighborSocket);
-                }
-                break;
-            } catch (IOException e) {
-                // Print the error and retry after the interval
-                logger.debug("Could not connect to neighbors");
-                if (retryCount < NUM_OF_RETRIES) {
-                    logger.debug("Retrying in " + RETRY_INTERVAL / 1000 + " seconds...");
-                    try {
-                        Thread.sleep(RETRY_INTERVAL);
-                    } catch (InterruptedException ex) {
-                        logger.error("An error occurred while connecting to the left neighbor", ex);
+    private void connectToNeighbor(InetSocketAddress neighborAddress, Direction direction) {
+        new Thread(() -> {
+            for (int retryCount = 1; retryCount <= NUM_OF_RETRIES; retryCount++) {
+                try {
+                    if (direction == Direction.LEFT) {
+                        leftNeighborSocket = new Socket(neighborAddress.getAddress(), neighborAddress.getPort());
+                        logger.debug("Connected to neighbor: " + leftNeighborSocket);
+                    } else {
+                        rightNeighborSocket = new Socket(neighborAddress.getAddress(), neighborAddress.getPort());
+                        logger.debug("Connected to neighbor: " + rightNeighborSocket);
                     }
-                } else {
-                    logger.error("Failed to connect after " + NUM_OF_RETRIES + " retries.");
-                    System.exit(1);
+                    break;
+                } catch (IOException e) {
+                    // Print the error and retry after the interval
+                    logger.debug("Could not connect to neighbors");
+                    if (retryCount < NUM_OF_RETRIES) {
+                        logger.debug("Retrying in " + RETRY_INTERVAL / 1000 + " seconds...");
+                        try {
+                            Thread.sleep(RETRY_INTERVAL);
+                        } catch (InterruptedException ex) {
+                            logger.error("An error occurred while connecting to the left neighbor", ex);
+                        }
+                    } else {
+                        logger.error("Failed to connect after " + NUM_OF_RETRIES + " retries.");
+                        System.exit(1);
+                    }
                 }
             }
-        }
+        }).start();
     }
+
 
     /**
      * Check if the philosopher is in the critical section
@@ -405,7 +397,7 @@ public class Philosopher {
      *
      * @param inCriticalSection True if the philosopher is in the critical section, false otherwise
      */
-    public synchronized void setInCriticalSection(boolean inCriticalSection) {
+    private synchronized void setInCriticalSection(boolean inCriticalSection) {
         this.inCriticalSection = inCriticalSection;
     }
 
