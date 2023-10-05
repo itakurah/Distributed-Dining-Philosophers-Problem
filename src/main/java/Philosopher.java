@@ -83,6 +83,7 @@ public class Philosopher {
      * The state of the reply
      */
     private boolean hasReply = true;
+    private final boolean isTest = false;
 
     /**
      * Constructor for the Philosopher class
@@ -101,10 +102,13 @@ public class Philosopher {
         this.inCriticalSection = false;
         this.isRequesting = false;
         // Connect to left and right neighbors
-        logger.debug("Connecting to neighbors");
-        connectToNeighbor(new InetSocketAddress(leftNeighborAddress, leftNeighborPort), Direction.LEFT);
-        connectToNeighbor(new InetSocketAddress(rightNeighborAddress, rightNeighborPort), Direction.RIGHT);
-        logger.debug("Connected to neighbors");
+        if (!isTest) {
+            logger.debug("Connecting to neighbors");
+            connectToNeighbor(new InetSocketAddress(leftNeighborAddress, leftNeighborPort), Direction.LEFT);
+            connectToNeighbor(new InetSocketAddress(rightNeighborAddress, rightNeighborPort), Direction.RIGHT);
+            logger.debug("Connected to neighbors");
+        }
+
     }
 
     /**
@@ -295,7 +299,7 @@ public class Philosopher {
      * @param receivingSocket The socket of the receiving neighbor
      * @param direction       The direction of the reply
      */
-    private synchronized void sendCounter(Socket receivingSocket, Direction direction, GCounter gCounter) {
+    public synchronized void sendCounter(Socket receivingSocket, Direction direction, GCounter gCounter) {
         ObjectOutputStream out;
         try {
             out = new ObjectOutputStream(receivingSocket.getOutputStream());
@@ -374,7 +378,7 @@ public class Philosopher {
                         try {
                             Thread.sleep(RETRY_INTERVAL);
                         } catch (InterruptedException ex) {
-                            logger.error("An error occurred while connecting to the left neighbor", ex);
+                            logger.error("Thread interrupted while connecting to the neighbor", ex);
                         }
                     } else {
                         logger.error("Failed to connect after " + NUM_OF_RETRIES + " retries.");
