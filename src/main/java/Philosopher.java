@@ -89,10 +89,12 @@ public class Philosopher {
      *
      * @param philosopherId The ID of the philosopher
      */
-    public Philosopher(int philosopherId, InetSocketAddress leftNeighborAddress, InetSocketAddress rightNeighborAddress) {
+    public Philosopher(int philosopherId, String leftNeighborAddress, int leftNeighborPort, String rightNeighborAddress, int rightNeighborPort) {
         if (philosopherId <= 0) throw new IllegalArgumentException("Philosopher ID must be greater than 0");
         if (leftNeighborAddress == null) throw new IllegalArgumentException("Left neighbor address cannot be null");
         if (rightNeighborAddress == null) throw new IllegalArgumentException("Right neighbor address cannot be null");
+        if ((leftNeighborPort < 49152 || rightNeighborPort < 49152) || (leftNeighborPort > 65535 | rightNeighborPort > 65535))
+            throw new InvalidPortException("Port is out of the valid range of 49152-65535");
         this.philosopherId = philosopherId;
         this.hasLeftFork = false;
         this.hasRightFork = false;
@@ -100,8 +102,8 @@ public class Philosopher {
         this.isRequesting = false;
         // Connect to left and right neighbors
         logger.debug("Connecting to neighbors");
-        connectToNeighbor(leftNeighborAddress, Direction.LEFT);
-        connectToNeighbor(rightNeighborAddress, Direction.RIGHT);
+        connectToNeighbor(new InetSocketAddress(leftNeighborAddress, leftNeighborPort), Direction.LEFT);
+        connectToNeighbor(new InetSocketAddress(rightNeighborAddress, rightNeighborPort), Direction.RIGHT);
         logger.debug("Connected to neighbors");
     }
 
