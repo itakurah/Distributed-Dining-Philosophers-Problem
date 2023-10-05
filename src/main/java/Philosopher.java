@@ -30,13 +30,13 @@ public class Philosopher {
      * The first element is the maximum time in milliseconds
      * The second element is the minimum time in milliseconds
      */
-    private final int[] eatInterval = new int[]{100, 50};
+    private final int[] eatInterval = new int[]{10000, 5000};
     /**
      * The interval for thinking
      * The first element is the maximum time in milliseconds
      * The second element is the minimum time in milliseconds
      */
-    private final int[] thinkInterval = new int[]{300, 50};
+    private final int[] thinkInterval = new int[]{30000, 5000};
     /**
      * The Lamport clock of the philosopher
      */
@@ -48,7 +48,7 @@ public class Philosopher {
     /**
      * The interval between updates sent to neighbors in milliseconds
      */
-    private final int UPDATE_INTERVAL = 100;
+    private final int UPDATE_INTERVAL = 10000;
     private final int PING_INTERVAL = 5000;
     /**
      * The ID of the philosopher
@@ -230,8 +230,8 @@ public class Philosopher {
         new Thread(() -> {
             while (true) {
                 try {
-                    sendPing(leftNeighborSocket, -1, Direction.RIGHT);
-                    sendPing(rightNeighborSocket, -1, Direction.LEFT);
+                    sendPing(leftNeighborSocket, false, Direction.RIGHT);
+                    sendPing(rightNeighborSocket, false, Direction.LEFT);
                     Thread.sleep(PING_INTERVAL);
                     if (!(isReceivedPingLeft() && isReceivedPingRight())) {
                         logger.error("Philosopher " + philosopherId + " has not received a ping back from his neighbors");
@@ -329,13 +329,14 @@ public class Philosopher {
      * Send a ping to a neighbor
      *
      * @param receivingSocket The socket of the receiving neighbor
+     * @param hasReceivedPing The hasReceivedPing flag of the sending philosopher
      * @param direction       The direction of the ping
      */
-    public synchronized void sendPing(Socket receivingSocket, int remotePhilosopherId, Direction direction) {
+    public synchronized void sendPing(Socket receivingSocket, boolean hasReceivedPing, Direction direction) {
         ObjectOutputStream out;
         try {
             out = new ObjectOutputStream(receivingSocket.getOutputStream());
-            Message replyMessage = new Message(MessageType.PING, this.philosopherId, remotePhilosopherId, direction);
+            Message replyMessage = new Message(MessageType.PING, this.philosopherId, hasReceivedPing, direction);
             out.writeObject(replyMessage);
             //out.flush(); hotfix for java.net.SocketException: Connection reset
             logger.debug("Philosopher " + philosopherId + " sent PING to Philosopher " + reverseDirection(direction));

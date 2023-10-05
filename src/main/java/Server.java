@@ -98,7 +98,7 @@ public class Server {
                         } else if (receivedMessage.getType() == MessageType.COUNTER) {
                             receiveCounter(receivedMessage.getPhilosopherId(), receivedMessage.getDirection(), receivedMessage.getGCounter());
                         } else if (receivedMessage.getType() == MessageType.PING) {
-                            receivePing(receivedMessage.getPhilosopherId(), receivedMessage.getRemotePhilosopherId(), receivedMessage.getDirection());
+                            receivePing(receivedMessage.getPhilosopherId(), receivedMessage.getHasReceivedPing(), receivedMessage.getDirection());
                         }
                     } catch (EOFException e) {
                         logger.error("Error while handling client request", e);
@@ -185,16 +185,16 @@ public class Server {
      * @param clientId  The ID of the neighbor
      * @param direction The direction of the ping
      */
-    private synchronized void receivePing(int clientId, int remotePhilosopherId, Direction direction) {
+    private synchronized void receivePing(int clientId, boolean hasReceivedPing, Direction direction) {
         logger.debug("Philosopher " + philosopher.getPhilosopherId() + " received PING from Philosopher " + clientId + " " + direction);
-        if (direction == Direction.LEFT && remotePhilosopherId == -1) {
-            philosopher.sendPing(philosopher.getLeftNeighborSocket(), clientId, philosopher.reverseDirection(direction));
-        } else if (direction == Direction.RIGHT && remotePhilosopherId == -1) {
-            philosopher.sendPing(philosopher.getRightNeighborSocket(), clientId, philosopher.reverseDirection(direction));
-        } else if (direction == Direction.LEFT && philosopher.getPhilosopherId() == remotePhilosopherId) {
-            philosopher.setReceivedPingRight(true);
-        } else if (direction == Direction.RIGHT && philosopher.getPhilosopherId() == remotePhilosopherId) {
+        if (direction == Direction.LEFT && !hasReceivedPing) {
+            philosopher.sendPing(philosopher.getLeftNeighborSocket(), true, philosopher.reverseDirection(direction));
+        } else if (direction == Direction.RIGHT && !hasReceivedPing) {
+            philosopher.sendPing(philosopher.getRightNeighborSocket(), true, philosopher.reverseDirection(direction));
+        } else if (direction == Direction.LEFT) {
             philosopher.setReceivedPingLeft(true);
+        } else if (direction == Direction.RIGHT) {
+            philosopher.setReceivedPingRight(true);
         }
     }
 
