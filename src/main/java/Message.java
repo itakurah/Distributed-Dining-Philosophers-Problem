@@ -17,9 +17,9 @@ public class Message implements Serializable {
      */
     private final Direction direction;
     /**
-     * The id of the remote philosopher
+     * The receiving flag of the sending philosopher
      */
-    private int remotePhilosopherId;
+    private boolean hasReceivedPing;
     /**
      * The timestamp of the message
      */
@@ -64,11 +64,11 @@ public class Message implements Serializable {
      * @param philosopherId The id of the philosopher that sent the message
      * @param direction     The direction of the message
      */
-    public Message(MessageType type, int philosopherId, int remotePhilosopherId, Direction direction) {
+    public Message(MessageType type, int philosopherId, boolean hasReceivedPing, Direction direction) {
         this.type = type;
         this.philosopherId = philosopherId;
         this.direction = direction;
-        this.remotePhilosopherId = remotePhilosopherId;
+        this.hasReceivedPing = hasReceivedPing;
     }
 
     /**
@@ -132,11 +132,11 @@ public class Message implements Serializable {
     }
 
     /**
-     * Get the id of the remote philosopher
+     * Get the receiving flag of the sending philosopher
      *
-     * @return The id of the remote philosopher
+     * @return The receiving flag of the sending philosopher
      */
-    public int getRemotePhilosopherId() {
-        return remotePhilosopherId;
+    public boolean getHasReceivedPing() {
+        return hasReceivedPing;
     }
 }
