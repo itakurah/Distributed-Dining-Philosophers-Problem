@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class TestPhilosopher {
+
     /**
      * Test if philosopher exceptions are thrown when invalid ids are used
      */
@@ -20,13 +21,16 @@ public class TestPhilosopher {
     @Test
     void PhilosopherValidId() {
         assertDoesNotThrow(() -> {
-            new Philosopher(1, "localhost", 49152, "localhost", 49153);
+            Philosopher philosopher1 = new Philosopher(1, "localhost", 49152, "localhost", 49152);
+            new Server(philosopher1, 49152);
         });
         assertDoesNotThrow(() -> {
-            new Philosopher(100, "localhost", 49152, "localhost", 49153);
+            Philosopher philosopher1 = new Philosopher(100, "localhost", 49153, "localhost", 49153);
+            new Server(philosopher1, 49153);
         });
         assertDoesNotThrow(() -> {
-            new Philosopher(Integer.MAX_VALUE, "localhost", 49152, "localhost", 49153);
+            Philosopher philosopher1 = new Philosopher(Integer.MAX_VALUE, "localhost", 49154, "localhost", 49154);
+            new Server(philosopher1, 49154);
         });
     }
 
