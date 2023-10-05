@@ -35,31 +35,31 @@ In this implementation, the philosophers can be executed either locally on diffe
 ### Local Network Setup
 1. Build the project using Maven:
 ```sh  
- mvn clean install  
+mvn clean install  
  ```
 2. Locate the `ddpp-1.0.jar` file inside the `taget` folder.  
 3. Start the simulation:  
  ```sh  
-  java -cp ddpp-1.0.jar Application <PhilosopherID> <LocalServerPort> <LeftNeighborHostAddress> <LeftNeighborPort> <RightNeighborHostAddress> <RightNeighborPort>  
+java -cp ddpp-1.0.jar Application <PhilosopherID> <LocalServerPort> <LeftNeighborHostAddress> <LeftNeighborPort> <RightNeighborHostAddress> <RightNeighborPort>  
  ```
 ### Docker Setup  
 1. In the same folder as the Dockerfile run:  
 ```sh  
-  docker build -t ddpp:latest
+docker build -t ddpp:latest
 ```  
 
 2. Generate the docker-compose file using:  
 ```sh  
-  java src\main\java\GenerateCompose.java <NumberOfDockerContainers> <InitialServerPort>      
+java src\main\java\GenerateCompose.java <NumberOfDockerContainers> <InitialServerPort>      
   ```
 Note: The initial server port is used to incrementally set the ports for the other containers.
 3. Start the Docker containers using:
  ```sh  
-  docker-compose -f docker-compose.yml up -d --remove-orphans  
+docker-compose -f docker-compose.yml up -d --remove-orphans  
  ```
 4. To stop the simulation run this command:
 ```sh  
-  docker-compose -f docker-compose.yml down  
+docker-compose -f docker-compose.yml down  
  ```  
 
 # License
