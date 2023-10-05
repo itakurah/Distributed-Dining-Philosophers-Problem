@@ -38,7 +38,7 @@ public class Server {
     public Server(Philosopher philosopher, int port) {
         if (philosopher == null) throw new IllegalArgumentException("Philosopher cannot be null");
         if (port < 49152 || port > 65535)
-            throw new InvalidPortException("Port is out of the valid range of 49152-65535");
+            throw new IllegalArgumentException("Port is out of the valid range of 49152-65535");
         this.philosopher = philosopher;
         this.PORT = port;
         this.serverLatch = new CountDownLatch(1); // Initialize the latch

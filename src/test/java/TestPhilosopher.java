@@ -69,7 +69,7 @@ public class TestPhilosopher {
      */
     @Test
     void PhilosopherValidPortLeftInvalidPortRightNeighbor() {
-        assertThrows(InvalidPortException.class, () -> new Philosopher(1, "localhost", 49152, "localhost", 65536));
+        assertThrows(IllegalArgumentException.class, () -> new Philosopher(1, "localhost", 49152, "localhost", 65536));
     }
 
     /**
@@ -77,7 +77,7 @@ public class TestPhilosopher {
      */
     @Test
     void PhilosopherInvalidPortLeftValidPortRightNeighbor() {
-        assertThrows(InvalidPortException.class, () -> new Philosopher(1, "localhost", 49151, "localhost", 65535));
+        assertThrows(IllegalArgumentException.class, () -> new Philosopher(1, "localhost", 49151, "localhost", 65535));
     }
 
     /**
@@ -85,6 +85,6 @@ public class TestPhilosopher {
      */
     @Test
     void PhilosopherInvalidPortLeftAndRightNeighbor() {
-        assertThrows(InvalidPortException.class, () -> new Philosopher(1, "localhost", 49151, "localhost", 65536));
+        assertThrows(IllegalArgumentException.class, () -> new Philosopher(1, "localhost", 49151, "localhost", 65536));
     }
 }

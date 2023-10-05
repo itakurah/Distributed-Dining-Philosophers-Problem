@@ -94,7 +94,7 @@ public class Philosopher {
         if (leftNeighborAddress == null) throw new IllegalArgumentException("Left neighbor address cannot be null");
         if (rightNeighborAddress == null) throw new IllegalArgumentException("Right neighbor address cannot be null");
         if ((leftNeighborPort < 49152 || rightNeighborPort < 49152) || (leftNeighborPort > 65535 | rightNeighborPort > 65535))
-            throw new InvalidPortException("Port is out of the valid range of 49152-65535");
+            throw new IllegalArgumentException("Port is out of the valid range of 49152-65535");
         this.philosopherId = philosopherId;
         this.hasLeftFork = false;
         this.hasRightFork = false;

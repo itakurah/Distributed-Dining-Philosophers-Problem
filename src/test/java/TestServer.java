@@ -23,8 +23,8 @@ public class TestServer {
         Philosopher philosopher1 = new Philosopher(1, "localhost", 49154, "localhost", 49154);
         Philosopher philosopher2 = new Philosopher(2, "localhost", 49155, "localhost", 49155);
 
-        assertThrows(InvalidPortException.class, () -> new Server(philosopher1, 49151));
-        assertThrows(InvalidPortException.class, () -> new Server(philosopher2, 65536));
+        assertThrows(IllegalArgumentException.class, () -> new Server(philosopher1, 49151));
+        assertThrows(IllegalArgumentException.class, () -> new Server(philosopher2, 65536));
     }
 
     /**
