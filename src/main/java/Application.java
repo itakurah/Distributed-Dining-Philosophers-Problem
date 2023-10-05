@@ -1,8 +1,6 @@
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.InetSocketAddress;
-
 /**
  * Main class to be run with docker
  */
@@ -13,12 +11,8 @@ public class Application {
     private static final Logger logger = LoggerFactory.getLogger(Application.class);
 
     public static void main(String[] args) {
-        InetSocketAddress leftNeighborAddress = new InetSocketAddress(args[2], Integer.parseInt(args[3]));
-        InetSocketAddress rightNeighborAddress = new InetSocketAddress(args[4], Integer.parseInt(args[5]));
-        Philosopher philosopher = new Philosopher(Integer.parseInt(args[0]), leftNeighborAddress, rightNeighborAddress);
+        Philosopher philosopher = new Philosopher(Integer.parseInt(args[0]), args[2], Integer.parseInt(args[3]), args[4], Integer.parseInt(args[5]));
         Server server = new Server(philosopher, Integer.parseInt(args[1]));
-        // Start server listener
-        logger.debug("Starting server listener");
         try {
             // Wait for the server to finish
             server.getServerLatch().await();
