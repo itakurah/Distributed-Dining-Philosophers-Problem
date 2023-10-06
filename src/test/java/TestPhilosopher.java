@@ -9,7 +9,7 @@ public class TestPhilosopher {
      * Test if philosopher exceptions are thrown when invalid ids are used
      */
     @Test
-    void PhilosopherInvalidIdException() {
+    void PhilosopherTestInvalidIdException() {
         assertThrows(IllegalArgumentException.class, () -> new Philosopher(-1, "localhost", 49152, "localhost", 49153));
         assertThrows(IllegalArgumentException.class, () -> new Philosopher(0, "localhost", 49152, "localhost", 49153));
         assertThrows(IllegalArgumentException.class, () -> new Philosopher(Integer.MIN_VALUE, "localhost", 49152, "localhost", 49153));
@@ -19,7 +19,7 @@ public class TestPhilosopher {
      * Test if philosopher is created if valid ports are used
      */
     @Test
-    void PhilosopherValidId() {
+    void PhilosopherTestValidId() {
         assertDoesNotThrow(() -> {
             Philosopher philosopher1 = new Philosopher(1, "localhost", 49152, "localhost", 49152);
             new Server(philosopher1, 49152);
@@ -38,7 +38,7 @@ public class TestPhilosopher {
      * Test if philosopher exceptions are thrown when invalid address are used
      */
     @Test
-    void PhilosopherInvalidLeftNeighborAddressException() {
+    void PhilosopherTestInvalidLeftNeighborAddressException() {
         assertThrows(IllegalArgumentException.class, () -> new Philosopher(1, null, 49152, "localhost", 49153));
     }
 
@@ -46,7 +46,7 @@ public class TestPhilosopher {
      * Test if philosopher exceptions are thrown when invalid address are used
      */
     @Test
-    void PhilosopherInvalidRightNeighborAddressException() {
+    void PhilosopherTestInvalidRightNeighborAddressException() {
         assertThrows(IllegalArgumentException.class, () -> new Philosopher(1, "localhost", 49152, null, 49153));
     }
 
@@ -54,7 +54,7 @@ public class TestPhilosopher {
      * Test if philosopher exceptions are thrown when invalid address are used
      */
     @Test
-    void PhilosopherInvalidAddressLeftAndRightNeighbor() {
+    void PhilosopherTestInvalidAddressLeftAndRightNeighbor() {
         assertThrows(IllegalArgumentException.class, () -> new Philosopher(1, null, 49152, null, 49153));
     }
 
@@ -62,7 +62,7 @@ public class TestPhilosopher {
      * Test if philosopher is created when valid ports are used
      */
     @Test
-    void PhilosopherValidPortLeftAndRightNeighbor() {
+    void PhilosopherTestValidPortLeftAndRightNeighbor() {
         assertDoesNotThrow(() -> {
             new Philosopher(1, "localhost", 49152, "localhost", 65535);
         });
@@ -72,7 +72,7 @@ public class TestPhilosopher {
      * Test if philosopher exceptions are thrown when invalid ports are used
      */
     @Test
-    void PhilosopherValidPortLeftInvalidPortRightNeighbor() {
+    void PhilosopherTestValidPortLeftInvalidPortRightNeighbor() {
         assertThrows(IllegalArgumentException.class, () -> new Philosopher(1, "localhost", 49152, "localhost", 65536));
     }
 
@@ -80,7 +80,7 @@ public class TestPhilosopher {
      * Test if philosopher exceptions are thrown when invalid ports are used
      */
     @Test
-    void PhilosopherInvalidPortLeftValidPortRightNeighbor() {
+    void PhilosopherTestInvalidPortLeftValidPortRightNeighbor() {
         assertThrows(IllegalArgumentException.class, () -> new Philosopher(1, "localhost", 49151, "localhost", 65535));
     }
 
@@ -88,7 +88,7 @@ public class TestPhilosopher {
      * Test if philosopher exceptions are thrown when invalid ports are used
      */
     @Test
-    void PhilosopherInvalidPortLeftAndRightNeighbor() {
+    void PhilosopherTestInvalidPortLeftAndRightNeighbor() {
         assertThrows(IllegalArgumentException.class, () -> new Philosopher(1, "localhost", 49151, "localhost", 65536));
     }
 }
