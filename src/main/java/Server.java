@@ -177,7 +177,7 @@ public class Server {
      */
     private synchronized void receiveCounter(int clientId, Direction direction, GCounter gCounter) {
         logger.debug("Philosopher " + philosopher.getPhilosopherId() + " received COUNTER from Philosopher " + clientId + " " + direction);
-        philosopher.getLocalCounter().merge(gCounter);
+        philosopher.getLocalGCounter().merge(gCounter);
     }
 
     /**
