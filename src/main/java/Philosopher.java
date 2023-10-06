@@ -58,6 +58,7 @@ public class Philosopher {
      * The local counter of the philosopher
      */
     private final GCounter localGCounter;
+    private final boolean isTest = false;
     /**
      * The left fork of the philosopher
      */
@@ -78,12 +79,10 @@ public class Philosopher {
      */
     private boolean receivedPingLeft = false;
     private boolean receivedPingRight = false;
-
     /**
      * The state of the reply
      */
     private boolean hasReply = true;
-    private final boolean isTest = false;
 
     /**
      * Constructor for the Philosopher class

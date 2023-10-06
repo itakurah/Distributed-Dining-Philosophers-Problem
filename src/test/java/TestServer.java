@@ -230,7 +230,7 @@ public class TestServer {
     }
 
     @Test
-    void serverTestPhilosopherHasForks(){
+    void serverTestPhilosopherHasForks() {
         Philosopher philosopher1 = new Philosopher(1, "localhost", 49165, "localhost", 49164);
         Philosopher philosopher2 = new Philosopher(2, "localhost", 49163, "localhost", 49165);
         Philosopher philosopher3 = new Philosopher(3, "localhost", 49164, "localhost", 49163);
@@ -247,31 +247,31 @@ public class TestServer {
             throw new RuntimeException("Error while waiting for server to finish", e);
         }
         philosopher1.requestForks();
-        Assertions.assertTrue(philosopher1.hasLeftFork()&&philosopher1.hasRightFork());
+        Assertions.assertTrue(philosopher1.hasLeftFork() && philosopher1.hasRightFork());
         Assertions.assertFalse(philosopher2.hasLeftFork() && philosopher2.hasRightFork());
         Assertions.assertFalse(philosopher3.hasLeftFork() && philosopher3.hasRightFork());
         philosopher1.releaseForks();
-        Assertions.assertFalse(philosopher1.hasLeftFork()&&philosopher1.hasRightFork());
+        Assertions.assertFalse(philosopher1.hasLeftFork() && philosopher1.hasRightFork());
         Assertions.assertFalse(philosopher2.hasLeftFork() && philosopher2.hasRightFork());
         Assertions.assertFalse(philosopher3.hasLeftFork() && philosopher3.hasRightFork());
         philosopher2.requestForks();
-        Assertions.assertTrue(philosopher2.hasLeftFork()&&philosopher2.hasRightFork());
+        Assertions.assertTrue(philosopher2.hasLeftFork() && philosopher2.hasRightFork());
         Assertions.assertFalse(philosopher1.hasLeftFork() && philosopher1.hasRightFork());
         Assertions.assertFalse(philosopher3.hasLeftFork() && philosopher3.hasRightFork());
         philosopher2.releaseForks();
-        Assertions.assertFalse(philosopher1.hasLeftFork()&&philosopher1.hasRightFork());
+        Assertions.assertFalse(philosopher1.hasLeftFork() && philosopher1.hasRightFork());
         Assertions.assertFalse(philosopher2.hasLeftFork() && philosopher2.hasRightFork());
         Assertions.assertFalse(philosopher3.hasLeftFork() && philosopher3.hasRightFork());
         philosopher3.requestForks();
-        Assertions.assertTrue(philosopher3.hasLeftFork()&&philosopher3.hasRightFork());
+        Assertions.assertTrue(philosopher3.hasLeftFork() && philosopher3.hasRightFork());
         Assertions.assertFalse(philosopher1.hasLeftFork() && philosopher1.hasRightFork());
         Assertions.assertFalse(philosopher2.hasLeftFork() && philosopher2.hasRightFork());
         philosopher3.releaseForks();
-        Assertions.assertFalse(philosopher1.hasLeftFork()&&philosopher1.hasRightFork());
+        Assertions.assertFalse(philosopher1.hasLeftFork() && philosopher1.hasRightFork());
         Assertions.assertFalse(philosopher2.hasLeftFork() && philosopher2.hasRightFork());
         Assertions.assertFalse(philosopher3.hasLeftFork() && philosopher3.hasRightFork());
         philosopher1.requestForks();
-        Assertions.assertTrue(philosopher1.hasLeftFork()&&philosopher1.hasRightFork());
+        Assertions.assertTrue(philosopher1.hasLeftFork() && philosopher1.hasRightFork());
         Assertions.assertFalse(philosopher2.hasLeftFork() && philosopher2.hasRightFork());
         Assertions.assertFalse(philosopher3.hasLeftFork() && philosopher3.hasRightFork());
     }
