@@ -48,16 +48,16 @@ public class Philosopher {
     /**
      * The interval between updates sent to neighbors in milliseconds
      */
-    private final int UPDATE_INTERVAL = 10000;
+    private final int UPDATE_INTERVAL = 100;
     private final int PING_INTERVAL = 5000;
     /**
      * The ID of the philosopher
      */
-    private int philosopherId;
+    private final int philosopherId;
     /**
      * The local counter of the philosopher
      */
-    private final GCounter localCounter = new GCounter(philosopherId);
+    private final GCounter localGCounter;
     /**
      * The left fork of the philosopher
      */
@@ -101,6 +101,7 @@ public class Philosopher {
         this.hasRightFork = false;
         this.inCriticalSection = false;
         this.isRequesting = false;
+        this.localGCounter = new GCounter(philosopherId);
         // Connect to left and right neighbors
         if (!isTest) {
             logger.debug("Connecting to neighbors");
@@ -128,7 +129,7 @@ public class Philosopher {
      */
     public void eat() {
         // Increment the local counter
-        localCounter.increment();
+        localGCounter.increment();
         logger.info("Philosopher " + philosopherId + " is eating.");
         try {
             Thread.sleep(new Random().nextInt(eatInterval[0] - eatInterval[1] + 1) + eatInterval[1]);
@@ -212,7 +213,7 @@ public class Philosopher {
         // Reset fork states
         hasLeftFork = false;
         hasRightFork = false;
-        logger.info("Philosophers have eaten a total of " + localCounter.query() + " times");
+        logger.info("Philosophers have eaten a total of " + localGCounter.query() + " times");
     }
 
     /**
@@ -322,8 +323,8 @@ public class Philosopher {
                 // Send the counter to the neighbors
                 try {
                     Thread.sleep(UPDATE_INTERVAL);
-                    sendCounter(rightNeighborSocket, Direction.LEFT, localCounter);
-                    sendCounter(leftNeighborSocket, Direction.RIGHT, localCounter);
+                    sendCounter(rightNeighborSocket, Direction.LEFT, localGCounter);
+                    sendCounter(leftNeighborSocket, Direction.RIGHT, localGCounter);
                 } catch (InterruptedException e) {
                     throw new RuntimeException(e);
                 }
@@ -470,8 +471,8 @@ public class Philosopher {
         this.hasRightFork = hasRightFork;
     }
 
-    public GCounter getLocalCounter() {
-        return localCounter;
+    public GCounter getLocalGCounter() {
+        return localGCounter;
     }
 
     public synchronized boolean isHasReply() {
