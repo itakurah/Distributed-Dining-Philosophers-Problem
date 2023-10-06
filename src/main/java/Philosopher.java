@@ -149,7 +149,7 @@ public class Philosopher {
         // Once site Pi has received a reply message from site Pj, site Pi may enter
         // the critical section multiple times without receiving permission from Pj on
         // subsequent attempts up to the moment when Pi has sent a reply message to Pj.
-        if (isHasReply()) {
+        if (hasReply()) {
             setHasReply(false);
             // Requesting forks
             setRequesting(true);
@@ -471,11 +471,19 @@ public class Philosopher {
         this.hasRightFork = hasRightFork;
     }
 
+    public boolean hasLeftFork() {
+        return hasLeftFork;
+    }
+
+    public boolean hasRightFork() {
+        return hasRightFork;
+    }
+
     public GCounter getLocalGCounter() {
         return localGCounter;
     }
 
-    public synchronized boolean isHasReply() {
+    public synchronized boolean hasReply() {
         return hasReply;
     }
 
