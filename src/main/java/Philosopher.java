@@ -19,6 +19,8 @@ public class Philosopher {
     private static final Logger logger = LoggerFactory.getLogger(Philosopher.class);
     /**
      * The flag to indicate if the philosopher is running in test mode
+     * This should NEVER be set to final otherwise the JUnit tests will fail
+     * This should NEVER be set to true in production
      */
     private static boolean isTest = false;
     /**
@@ -373,7 +375,7 @@ public class Philosopher {
                         logger.debug("Connected to neighbor: " + rightNeighborSocket);
                     }
                     break;
-                } catch (IOException e) {
+                } catch (IOException | NullPointerException e) {
                     // Print the error and retry after the interval
                     logger.debug("Could not connect to neighbors");
                     if (retryCount < NUM_OF_RETRIES) {
