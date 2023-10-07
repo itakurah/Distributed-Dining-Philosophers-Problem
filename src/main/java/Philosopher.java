@@ -20,7 +20,7 @@ public class Philosopher {
     /**
      * The flag to indicate if the philosopher is running in test mode
      */
-    private static final boolean isTest = false;
+    private static boolean isTest = false;
     /**
      * The maximum number of retries
      */
