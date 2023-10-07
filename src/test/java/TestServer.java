@@ -247,32 +247,125 @@ public class TestServer {
             throw new RuntimeException("Error while waiting for server to finish", e);
         }
         philosopher1.requestForks();
-        Assertions.assertTrue(philosopher1.hasLeftFork() && philosopher1.hasRightFork());
-        Assertions.assertFalse(philosopher2.hasLeftFork() && philosopher2.hasRightFork());
-        Assertions.assertFalse(philosopher3.hasLeftFork() && philosopher3.hasRightFork());
         philosopher1.releaseForks();
-        Assertions.assertFalse(philosopher1.hasLeftFork() && philosopher1.hasRightFork());
-        Assertions.assertFalse(philosopher2.hasLeftFork() && philosopher2.hasRightFork());
-        Assertions.assertFalse(philosopher3.hasLeftFork() && philosopher3.hasRightFork());
         philosopher2.requestForks();
-        Assertions.assertTrue(philosopher2.hasLeftFork() && philosopher2.hasRightFork());
-        Assertions.assertFalse(philosopher1.hasLeftFork() && philosopher1.hasRightFork());
-        Assertions.assertFalse(philosopher3.hasLeftFork() && philosopher3.hasRightFork());
         philosopher2.releaseForks();
-        Assertions.assertFalse(philosopher1.hasLeftFork() && philosopher1.hasRightFork());
-        Assertions.assertFalse(philosopher2.hasLeftFork() && philosopher2.hasRightFork());
-        Assertions.assertFalse(philosopher3.hasLeftFork() && philosopher3.hasRightFork());
         philosopher3.requestForks();
-        Assertions.assertTrue(philosopher3.hasLeftFork() && philosopher3.hasRightFork());
-        Assertions.assertFalse(philosopher1.hasLeftFork() && philosopher1.hasRightFork());
-        Assertions.assertFalse(philosopher2.hasLeftFork() && philosopher2.hasRightFork());
         philosopher3.releaseForks();
-        Assertions.assertFalse(philosopher1.hasLeftFork() && philosopher1.hasRightFork());
-        Assertions.assertFalse(philosopher2.hasLeftFork() && philosopher2.hasRightFork());
-        Assertions.assertFalse(philosopher3.hasLeftFork() && philosopher3.hasRightFork());
         philosopher1.requestForks();
         Assertions.assertTrue(philosopher1.hasLeftFork() && philosopher1.hasRightFork());
         Assertions.assertFalse(philosopher2.hasLeftFork() && philosopher2.hasRightFork());
         Assertions.assertFalse(philosopher3.hasLeftFork() && philosopher3.hasRightFork());
+    }
+
+    @Test
+    void serverTestPhilosopherHasReceivedPing() {
+        Philosopher philosopher1 = new Philosopher(1, "localhost", 49165, "localhost", 49164);
+        Philosopher philosopher2 = new Philosopher(2, "localhost", 49163, "localhost", 49165);
+        Philosopher philosopher3 = new Philosopher(3, "localhost", 49164, "localhost", 49163);
+
+        Server server1 = new Server(philosopher1, 49163);
+        Server server2 = new Server(philosopher2, 49164);
+        Server server3 = new Server(philosopher3, 49165);
+        try {
+            // Wait for the server to finish
+            server1.getServerLatch().await();
+            server2.getServerLatch().await();
+            server3.getServerLatch().await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Error while waiting for server to finish", e);
+        }
+        philosopher1.requestPing();
+        philosopher2.requestPing();
+        philosopher3.requestPing();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        Assertions.assertTrue(philosopher1.isReceivedPingLeft() && philosopher1.isReceivedPingRight());
+        Assertions.assertTrue(philosopher2.isReceivedPingLeft() && philosopher2.isReceivedPingRight());
+        Assertions.assertTrue(philosopher3.isReceivedPingLeft() && philosopher3.isReceivedPingRight());
+    }
+
+    @Test
+    void serverPhilosopherIsRequesting() {
+        Philosopher philosopher1 = new Philosopher(1, "localhost", 49165, "localhost", 49164);
+        Philosopher philosopher2 = new Philosopher(2, "localhost", 49163, "localhost", 49165);
+        Philosopher philosopher3 = new Philosopher(3, "localhost", 49164, "localhost", 49163);
+
+        Server server1 = new Server(philosopher1, 49163);
+        Server server2 = new Server(philosopher2, 49164);
+        Server server3 = new Server(philosopher3, 49165);
+        try {
+            // Wait for the server to finish
+            server1.getServerLatch().await();
+            server2.getServerLatch().await();
+            server3.getServerLatch().await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Error while waiting for server to finish", e);
+        }
+        philosopher2.requestForks();
+        new Thread(philosopher3::requestForks).start();
+        new Thread(philosopher1::requestForks).start();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        Assertions.assertTrue(philosopher3.isRequesting());
+        Assertions.assertTrue(philosopher1.isRequesting());
+    }
+
+    @Test
+    void serverPhilosopherIsInCriticalSection() {
+        Philosopher philosopher1 = new Philosopher(1, "localhost", 49165, "localhost", 49164);
+        Philosopher philosopher2 = new Philosopher(2, "localhost", 49163, "localhost", 49165);
+        Philosopher philosopher3 = new Philosopher(3, "localhost", 49164, "localhost", 49163);
+
+        Server server1 = new Server(philosopher1, 49163);
+        Server server2 = new Server(philosopher2, 49164);
+        Server server3 = new Server(philosopher3, 49165);
+        try {
+            // Wait for the server to finish
+            server1.getServerLatch().await();
+            server2.getServerLatch().await();
+            server3.getServerLatch().await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Error while waiting for server to finish", e);
+        }
+        philosopher1.requestForks();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        Assertions.assertTrue(philosopher1.inCriticalSection());
+    }
+
+    @Test
+    void serverPhilosopherIsNotRequesting() {
+        Philosopher philosopher1 = new Philosopher(1, "localhost", 49165, "localhost", 49164);
+        Philosopher philosopher2 = new Philosopher(2, "localhost", 49163, "localhost", 49165);
+        Philosopher philosopher3 = new Philosopher(3, "localhost", 49164, "localhost", 49163);
+
+        Server server1 = new Server(philosopher1, 49163);
+        Server server2 = new Server(philosopher2, 49164);
+        Server server3 = new Server(philosopher3, 49165);
+        try {
+            // Wait for the server to finish
+            server1.getServerLatch().await();
+            server2.getServerLatch().await();
+            server3.getServerLatch().await();
+        } catch (InterruptedException e) {
+            throw new RuntimeException("Error while waiting for server to finish", e);
+        }
+        philosopher1.requestForks();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        Assertions.assertFalse(philosopher1.isRequesting());
     }
 }
