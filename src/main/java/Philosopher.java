@@ -18,6 +18,10 @@ public class Philosopher {
      */
     private static final Logger logger = LoggerFactory.getLogger(Philosopher.class);
     /**
+     * The flag to indicate if the philosopher is running in test mode
+     */
+    private static final boolean isTest = false;
+    /**
      * The maximum number of retries
      */
     final int NUM_OF_RETRIES = 20;
@@ -58,7 +62,6 @@ public class Philosopher {
      * The local counter of the philosopher
      */
     private final GCounter localGCounter;
-    private final boolean isTest = false;
     /**
      * The left fork of the philosopher
      */
@@ -183,7 +186,7 @@ public class Philosopher {
             }
         }
         // Enter critical section
-        setInCriticalSection(true);
+        setCriticalSection(true);
         // No longer requesting forks
         setRequesting(false);
         logger.debug("Philosopher " + philosopherId + " entered the critical section.");
@@ -195,7 +198,7 @@ public class Philosopher {
      */
     public void releaseForks() {
         // Exit critical section
-        setInCriticalSection(false);
+        setCriticalSection(false);
         logger.debug("Philosopher " + philosopherId + " is releasing forks.");
         logger.info("Philosopher " + philosopherId + " is releasing forks.");
         logger.debug("deferredRequests: " + deferredRequests.size());
@@ -404,7 +407,7 @@ public class Philosopher {
      *
      * @param inCriticalSection True if the philosopher is in the critical section, false otherwise
      */
-    private synchronized void setInCriticalSection(boolean inCriticalSection) {
+    private synchronized void setCriticalSection(boolean inCriticalSection) {
         this.inCriticalSection = inCriticalSection;
     }
 
