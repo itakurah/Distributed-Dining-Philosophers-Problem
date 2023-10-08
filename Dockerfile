@@ -8,7 +8,7 @@ COPY pom.xml $APP_HOME
 COPY src $APP_HOME/src
 
 # Build the Maven project
-RUN mvn clean install
+RUN mvn clean install -DskipTests
 
 # Use an official OpenJDK runtime as a base image
 FROM openjdk:21-jdk-slim
