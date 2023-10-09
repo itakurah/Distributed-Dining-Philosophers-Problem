@@ -66,6 +66,14 @@ public class Philosopher {
      */
     private final GCounter localGCounter;
     /**
+     * The regular expression pattern for "localhost"
+     */
+    String localhostPattern = "^localhost$";
+    /**
+     * The regular expression pattern for IPv4 addresses
+     */
+    String ipv4Pattern = "^(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
+    /**
      * The left fork of the philosopher
      */
     private boolean hasLeftFork;
@@ -89,10 +97,6 @@ public class Philosopher {
      * The state of the reply
      */
     private boolean hasReply = true;
-    // Regular expression pattern for "localhost"
-    String localhostPattern = "^localhost$";
-    // Regular expression pattern for IPv4 addresses
-    String ipv4Pattern = "^(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
 
     /**
      * Constructor for the Philosopher class

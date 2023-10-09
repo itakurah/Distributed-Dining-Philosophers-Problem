@@ -79,7 +79,7 @@ public class TestPhilosopher {
                 "255.255.255.255"
         };
         for (String ipAddress : validIPAddresses) {
-            assertDoesNotThrow(() -> new Philosopher(1,  ipAddress, 49152, ipAddress, 49153));
+            assertDoesNotThrow(() -> new Philosopher(1, ipAddress, 49152, ipAddress, 49153));
         }
         try {
             field.setBoolean(null, false);
