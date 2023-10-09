@@ -58,7 +58,7 @@ public class Message implements Serializable {
     }
 
     /**
-     * Create a new reply or ping message
+     * Create a new ping message
      *
      * @param type          The type of the message
      * @param philosopherId The id of the philosopher that sent the message
