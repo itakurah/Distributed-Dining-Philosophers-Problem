@@ -25,8 +25,10 @@ public class Application {
         logger.debug("Starting game thread");
         Game game = new Game(philosopher);
         game.start();
+        logger.debug("Starting counter thread");
         // Start neighbor counter
         philosopher.updateNeighborCounter();
+        logger.debug("Starting ping thread");
         // Start ping service
         philosopher.requestPing();
     }
