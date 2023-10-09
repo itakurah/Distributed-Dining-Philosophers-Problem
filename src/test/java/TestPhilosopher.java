@@ -55,72 +55,27 @@ public class TestPhilosopher {
     }
 
     /**
-     * Test if the given ipv4 addresses are valid
+     * Test if philosopher exceptions are thrown when invalid address are used
      */
     @Test
-    void PhilosopherTestValidAddress() {
-        Field field = null;
-        try {
-            field = Philosopher.class.getDeclaredField("isTest");
-        } catch (NoSuchFieldException e) {
-            throw new RuntimeException(e);
-        }
-        field.setAccessible(true); // Make the field accessible
-        try {
-            field.setBoolean(null, true);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
-        String[] validIPAddresses = {
-                "192.168.1.1",
-                "10.0.0.1",
-                "172.16.0.1",
-                "127.0.0.1",
-                "255.255.255.255"
-        };
-        for (String ipAddress : validIPAddresses) {
-            assertDoesNotThrow(() -> new Philosopher(1, ipAddress, 49152, ipAddress, 49153));
-        }
-        try {
-            field.setBoolean(null, false);
-        } catch (IllegalAccessException e) {
-            throw new RuntimeException(e);
-        }
+    void PhilosopherTestInvalidLeftNeighborAddressException() {
+        assertThrows(IllegalArgumentException.class, () -> new Philosopher(1, null, 49152, "localhost", 49153));
     }
 
     /**
-     * Test if given ipv4 addresses are invalid
+     * Test if philosopher exceptions are thrown when invalid address are used
      */
     @Test
-    void PhilosopherTestInvalidAddressException() {
-        String[] invalidIPAddresses = {
-                "localhosts",
-                null,
-                "2220.0.0.0",
-                "123.123.3445.653",
-                "999.999.999.999",
-                "256.256.256.256",
-                "111.abc.123.456",
-                "1.2.3.4.5",
-                "300.400.500.600",
-                "255.255.255.256",
-                "192.168.1.1a",
-                "192.168.1.1#",
-                "192.168.1.1@",
-                "192.168.1.1$",
-                "192.168.1.1%",
-                "192.168.1.1^",
-                "192.168.1.1&",
-                "192.168.1.1*",
-                "192.168.1.1(",
-                "192.168.1.1)",
-                "192.168.1.1<",
-                "192.168.1.1>"
-        };
+    void PhilosopherTestInvalidRightNeighborAddressException() {
+        assertThrows(IllegalArgumentException.class, () -> new Philosopher(1, "localhost", 49152, null, 49153));
+    }
 
-        for (String ipAddress : invalidIPAddresses) {
-            assertThrows(IllegalArgumentException.class, () -> new Philosopher(1, ipAddress, 49152, ipAddress, 49153));
-        }
+    /**
+     * Test if philosopher exceptions are thrown when invalid address are used
+     */
+    @Test
+    void PhilosopherTestInvalidAddressLeftAndRight() {
+        assertThrows(IllegalArgumentException.class, () -> new Philosopher(1, null, 49152, null, 49152));
     }
 
     /**

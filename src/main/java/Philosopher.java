@@ -8,7 +8,6 @@ import java.net.Socket;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.regex.Pattern;
 
 /**
  * The Philosopher class represents a philosopher in the dining philosophers problem
@@ -66,14 +65,6 @@ public class Philosopher {
      */
     private final GCounter localGCounter;
     /**
-     * The regular expression pattern for "localhost"
-     */
-    String localhostPattern = "^localhost$";
-    /**
-     * The regular expression pattern for IPv4 addresses
-     */
-    String ipv4Pattern = "^(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$";
-    /**
      * The left fork of the philosopher
      */
     private boolean hasLeftFork;
@@ -107,10 +98,6 @@ public class Philosopher {
         if (philosopherId <= 0) throw new IllegalArgumentException("Philosopher ID must be greater than 0");
         if (leftNeighborAddress == null) throw new IllegalArgumentException("Left neighbor address cannot be null");
         if (rightNeighborAddress == null) throw new IllegalArgumentException("Right neighbor address cannot be null");
-        if (!(Pattern.matches(ipv4Pattern, leftNeighborAddress) || Pattern.matches(localhostPattern, leftNeighborAddress)) ||
-                !(Pattern.matches(ipv4Pattern, rightNeighborAddress) || Pattern.matches(localhostPattern, rightNeighborAddress))) {
-            throw new IllegalArgumentException("Invalid IP address, for IPv4 use the format xxx.xxx.xxx.xxx or localhost");
-        }
         if ((leftNeighborPort < 49152 || rightNeighborPort < 49152) || (leftNeighborPort > 65535 | rightNeighborPort > 65535))
             throw new IllegalArgumentException("Port is out of the valid range of 49152-65535");
         this.philosopherId = philosopherId;
