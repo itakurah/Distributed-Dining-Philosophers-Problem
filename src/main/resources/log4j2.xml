@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Configuration status="INFO">
+    <CustomLevels>
+        <CustomLevel name="NOTICE" intLevel="350" />
+    </CustomLevels>
     <Appenders>
         <Console name="Console" target="SYSTEM_OUT">
             <PatternLayout
-                    pattern="%highlight{[%d{HH:mm:ss.SSS}][%level]}{FATAL=red, ERROR=red, WARN=yellow, INFO=blue, DEBUG=green} -> %highlight{%msg}{FATAL=red, ERROR=red, WARN=yellow, INFO=blue, DEBUG=green}%n" disableAnsi="false"/>
+                    pattern="%highlight{[%d{HH:mm:ss.SSS}][%level]}{FATAL=red, ERROR=red, WARN=yellow, NOTICE=magenta, INFO=blue, DEBUG=green} -> %highlight{%msg}{FATAL=red, ERROR=red, WARN=yellow, INFO=blue, NOTICE=magenta, DEBUG=green}%n" disableAnsi="false"/>
         </Console>
     </Appenders>
     <Loggers>
