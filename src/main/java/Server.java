@@ -58,7 +58,7 @@ public class Server {
     private void startListener() {
         new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-                logger.log(NOTICE,"Server started on port " + PORT);
+                logger.log(NOTICE, "Server started on port " + PORT);
                 // Initialize the connectedClients counter
                 int connectedClients = 0;
                 // Keep accepting clients until 2 clients are connected
