@@ -1,5 +1,6 @@
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.EOFException;
 import java.io.IOException;
@@ -15,7 +16,8 @@ public class Server {
     /**
      * The logger for the server class
      */
-    private static final Logger logger = LoggerFactory.getLogger(Server.class);
+    private static final Logger logger = LogManager.getLogger(Server.class);
+    private final Level NOTICE = Level.forName("NOTICE", 350);
     /**
      * The port that the server listens on
      */
@@ -36,9 +38,14 @@ public class Server {
      * @param port        The port that the server listens on
      */
     public Server(Philosopher philosopher, int port) {
-        if (philosopher == null) throw new IllegalArgumentException("Philosopher cannot be null");
-        if (port < 49152 || port > 65535)
+        if (philosopher == null) {
+            logger.error("Philosopher cannot be null");
+            throw new IllegalArgumentException("Philosopher cannot be null");
+        }
+        if (port < 49152 || port > 65535) {
+            logger.error("Invalid port number: " + port);
             throw new IllegalArgumentException("Port is out of the valid range of 49152-65535");
+        }
         this.philosopher = philosopher;
         this.PORT = port;
         this.serverLatch = new CountDownLatch(1); // Initialize the latch
@@ -51,7 +58,7 @@ public class Server {
     private void startListener() {
         new Thread(() -> {
             try (ServerSocket serverSocket = new ServerSocket(PORT)) {
-                logger.debug("Server started on port " + PORT);
+                logger.log(NOTICE,"Server started on port " + PORT);
                 // Initialize the connectedClients counter
                 int connectedClients = 0;
                 // Keep accepting clients until 2 clients are connected
@@ -61,7 +68,7 @@ public class Server {
                         Socket socket = serverSocket.accept();
                         // Increment the connectedClients counter
                         connectedClients++;
-                        logger.debug("Client connected (" + connectedClients + " total): " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
+                        logger.log(NOTICE, "Client connected (" + connectedClients + " total): " + socket.getInetAddress().getHostAddress() + ":" + socket.getPort());
                         // Create new thread for message handling per socket
                         messageHandler(socket);
                     } catch (IOException e) {
@@ -69,7 +76,7 @@ public class Server {
                     }
                 }
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                logger.error("Error while starting the listener", e);
             } finally {
                 serverLatch.countDown(); // Count down the latch when the server finishes
             }

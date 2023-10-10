@@ -1,5 +1,6 @@
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Main class to be run with docker
@@ -8,7 +9,8 @@ public class Application {
     /**
      * The logger for the Application class
      */
-    private static final Logger logger = LoggerFactory.getLogger(Application.class);
+    private static final Logger logger = LogManager.getLogger(Server.class);
+    private final Level NOTICE = Level.forName("NOTICE", 350);
 
     public static void main(String[] args) {
         Philosopher philosopher = new Philosopher(Integer.parseInt(args[0]), args[2], Integer.parseInt(args[3]), args[4], Integer.parseInt(args[5]));

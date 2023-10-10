@@ -1,5 +1,6 @@
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
@@ -16,7 +17,8 @@ public class Philosopher {
     /**
      * The logger for the Philosopher class
      */
-    private static final Logger logger = LoggerFactory.getLogger(Philosopher.class);
+    private static final Logger logger = LogManager.getLogger(Server.class);
+    private final Level NOTICE = Level.forName("NOTICE", 350);
     /**
      * The flag to indicate if the philosopher is running in test mode
      * This should NEVER be set to final otherwise the JUnit tests will fail
@@ -26,11 +28,11 @@ public class Philosopher {
     /**
      * The maximum number of retries
      */
-    final int NUM_OF_RETRIES = 20;
+    final int NUM_OF_RETRIES = 5;
     /**
      * The interval between retries in milliseconds
      */
-    final int RETRY_INTERVAL = 2000;
+    final int RETRY_INTERVAL = 5000;
     /**
      * The interval for eating
      * The first element is the maximum time in milliseconds
@@ -95,11 +97,22 @@ public class Philosopher {
      * @param philosopherId The ID of the philosopher
      */
     public Philosopher(int philosopherId, String leftNeighborAddress, int leftNeighborPort, String rightNeighborAddress, int rightNeighborPort) {
-        if (philosopherId <= 0) throw new IllegalArgumentException("Philosopher ID must be greater than 0");
-        if (leftNeighborAddress == null) throw new IllegalArgumentException("Left neighbor address cannot be null");
-        if (rightNeighborAddress == null) throw new IllegalArgumentException("Right neighbor address cannot be null");
-        if ((leftNeighborPort < 49152 || rightNeighborPort < 49152) || (leftNeighborPort > 65535 | rightNeighborPort > 65535))
+        if (philosopherId <= 0) {
+            logger.error("Invalid philosopher ID: " + philosopherId);
+            throw new IllegalArgumentException("Philosopher ID must be greater than 0");
+        }
+        if (leftNeighborAddress == null) {
+            logger.error("Left neighbor address is null");
+            throw new IllegalArgumentException("Left neighbor address cannot be null");
+        }
+        if (rightNeighborAddress == null) {
+            logger.error("Right neighbor address is null");
+            throw new IllegalArgumentException("Right neighbor address cannot be null");
+        }
+        if ((leftNeighborPort < 49152 || rightNeighborPort < 49152) || (leftNeighborPort > 65535 | rightNeighborPort > 65535)) {
+            logger.error("Invalid port number: leftNeighborPort=" + leftNeighborPort + ", rightNeighborPort=" + rightNeighborPort);
             throw new IllegalArgumentException("Port is out of the valid range of 49152-65535");
+        }
         this.philosopherId = philosopherId;
         this.hasLeftFork = false;
         this.hasRightFork = false;
@@ -108,19 +121,17 @@ public class Philosopher {
         this.localGCounter = new GCounter(philosopherId);
         // Connect to left and right neighbors
         if (!isTest) {
-            logger.debug("Connecting to neighbors");
+            logger.log(NOTICE,"Connecting to neighbors...");
             connectToNeighbor(new InetSocketAddress(leftNeighborAddress, leftNeighborPort), Direction.LEFT);
             connectToNeighbor(new InetSocketAddress(rightNeighborAddress, rightNeighborPort), Direction.RIGHT);
-            logger.debug("Connected to neighbors");
         }
-
     }
 
     /**
      * Simulate thinking
      */
     public void think() {
-        logger.info("Philosopher " + philosopherId + " is thinking.");
+        logger.info("Philosopher " + philosopherId + " is thinking...");
         try {
             Thread.sleep(new Random().nextInt(thinkInterval[0] - thinkInterval[1] + 1) + thinkInterval[1]);
         } catch (InterruptedException e) {
@@ -134,7 +145,7 @@ public class Philosopher {
     public void eat() {
         // Increment the local counter
         localGCounter.increment();
-        logger.info("Philosopher " + philosopherId + " is eating.");
+        logger.info("Philosopher " + philosopherId + " is eating...");
         try {
             Thread.sleep(new Random().nextInt(eatInterval[0] - eatInterval[1] + 1) + eatInterval[1]);
         } catch (InterruptedException e) {
@@ -160,7 +171,7 @@ public class Philosopher {
             // Get the current Lamport timestamp
             int timestamp = lamportClock.getTimestamp();
             logger.debug("Philosopher " + philosopherId + " is requesting forks with timestamp " + timestamp);
-            logger.info("Philosopher " + philosopherId + " is requesting forks.");
+            logger.debug("Philosopher " + philosopherId + " is requesting forks.");
             // Request forks from neighbors
             logger.info("Philosopher " + philosopherId + " is requesting left fork.");
             sendRequest(leftNeighborSocket, Direction.RIGHT, timestamp);
@@ -217,7 +228,7 @@ public class Philosopher {
         // Reset fork states
         hasLeftFork = false;
         hasRightFork = false;
-        logger.info("Philosophers have eaten a total of " + localGCounter.query() + " times");
+        logger.log(NOTICE,"Philosophers have eaten a total of " + localGCounter.query() + " times.");
     }
 
     /**
@@ -369,17 +380,16 @@ public class Philosopher {
                 try {
                     if (direction == Direction.LEFT) {
                         leftNeighborSocket = new Socket(neighborAddress.getAddress(), neighborAddress.getPort());
-                        logger.debug("Connected to neighbor: " + leftNeighborSocket);
+                        logger.log(NOTICE, "Connected to neighbor: " + leftNeighborSocket);
                     } else {
                         rightNeighborSocket = new Socket(neighborAddress.getAddress(), neighborAddress.getPort());
-                        logger.debug("Connected to neighbor: " + rightNeighborSocket);
+                        logger.log(NOTICE,"Connected to neighbor: " + rightNeighborSocket);
                     }
                     break;
-                } catch (IOException | NullPointerException e) {
-                    // Print the error and retry after the interval
-                    logger.debug("Could not connect to neighbors");
+                } catch (IOException e) {
+                    logger.warn("Could not connect to neighbor: " + neighborAddress.getAddress() + ":" + neighborAddress.getPort());
                     if (retryCount < NUM_OF_RETRIES) {
-                        logger.debug("Retrying in " + RETRY_INTERVAL / 1000 + " seconds...");
+                        logger.warn("Retrying in " + RETRY_INTERVAL / 1000 + " seconds...");
                         try {
                             Thread.sleep(RETRY_INTERVAL);
                         } catch (InterruptedException ex) {
@@ -389,8 +399,13 @@ public class Philosopher {
                         logger.error("Failed to connect after " + NUM_OF_RETRIES + " retries.");
                         System.exit(1);
                     }
+                } catch (NullPointerException e) {
+                    logger.error("Failed to connect to neighbor: " + neighborAddress.getAddress() + ":" + neighborAddress.getPort(), e);
+                    logger.error("Invalid hostname or IP");
+                    System.exit(1);
                 }
             }
+            logger.log(NOTICE,"Connected to neighbors");
         }).start();
     }
 
