@@ -18,7 +18,6 @@ public class Philosopher {
      * The logger for the Philosopher class
      */
     private static final Logger logger = LogManager.getLogger(Server.class);
-    private final Level NOTICE = Level.forName("NOTICE", 350);
     /**
      * The flag to indicate if the philosopher is running in test mode
      * This should NEVER be set to final otherwise the JUnit tests will fail
@@ -28,11 +27,15 @@ public class Philosopher {
     /**
      * The maximum number of retries
      */
-    final int NUM_OF_RETRIES = 5;
+    private final int NUM_OF_RETRIES = 5;
     /**
      * The interval between retries in milliseconds
      */
-    final int RETRY_INTERVAL = 5000;
+    private final int RETRY_INTERVAL = 5000;
+    /**
+     * Custom log level
+     */
+    private final Level NOTICE = Level.forName("NOTICE", 350);
     /**
      * The interval for eating
      * The first element is the maximum time in milliseconds
@@ -121,7 +124,7 @@ public class Philosopher {
         this.localGCounter = new GCounter(philosopherId);
         // Connect to left and right neighbors
         if (!isTest) {
-            logger.log(NOTICE,"Connecting to neighbors...");
+            logger.log(NOTICE, "Connecting to neighbors...");
             connectToNeighbor(new InetSocketAddress(leftNeighborAddress, leftNeighborPort), Direction.LEFT);
             connectToNeighbor(new InetSocketAddress(rightNeighborAddress, rightNeighborPort), Direction.RIGHT);
         }
@@ -228,7 +231,7 @@ public class Philosopher {
         // Reset fork states
         hasLeftFork = false;
         hasRightFork = false;
-        logger.log(NOTICE,"Philosophers have eaten a total of " + localGCounter.query() + " times.");
+        logger.log(NOTICE, "Philosophers have eaten a total of " + localGCounter.query() + " times.");
     }
 
     /**
@@ -383,7 +386,7 @@ public class Philosopher {
                         logger.log(NOTICE, "Connected to neighbor: " + leftNeighborSocket);
                     } else {
                         rightNeighborSocket = new Socket(neighborAddress.getAddress(), neighborAddress.getPort());
-                        logger.log(NOTICE,"Connected to neighbor: " + rightNeighborSocket);
+                        logger.log(NOTICE, "Connected to neighbor: " + rightNeighborSocket);
                     }
                     break;
                 } catch (IOException e) {
@@ -400,12 +403,12 @@ public class Philosopher {
                         System.exit(1);
                     }
                 } catch (NullPointerException e) {
-                    logger.error("Failed to connect to neighbor: " + neighborAddress.getAddress() + ":" + neighborAddress.getPort(), e);
+                    logger.error("Failed to connect to neighbor: " + neighborAddress.getAddress() + ":" + neighborAddress.getPort());
                     logger.error("Invalid hostname or IP");
                     System.exit(1);
                 }
             }
-            logger.log(NOTICE,"Connected to neighbors");
+            logger.log(NOTICE, "Connected to neighbors");
         }).start();
     }
 
